@@ -57,3 +57,13 @@ py message_inspector.py messages.jsonl --output message_report.json
 ```
 
 The report summarizes payload shapes and timestamps; it does not infer future crash outcomes. Do not publish raw network captures, even if the report itself masks sensitive-looking field names.
+
+## Experimental in-app event capture
+
+1. Start the app and open the game URL in the embedded browser.
+2. Check **Capture sanitized game events (experimental)**. The page reloads to activate the observer.
+3. Let several rounds finish without placing bets. The sidebar shows the count of recognized events.
+4. Click **Export sanitized timing report** to save a local JSON report.
+5. Inspect the report before sharing. **Never upload raw frames, browser profiles, or credentials to this public repository.**
+
+Capture uses an opt-in JavaScript observer for WebSocket message events, recognizes only the known SignalR target names, and saves only `target`, numeric `l`, `ln`, `ts`, and final `f` plus a local UTC receipt timestamp. It does not capture all network protocols and may not work on this site. Capture is off by default; disabling stops recording, but reloading the page is recommended to remove the in-page observer. A report describes observed round durations, **not** UI animation delays or next-round results. No automatic upload to GitHub is implemented. The integration is not yet tested on Windows.
