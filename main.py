@@ -15,6 +15,7 @@ from analysis_engine import read_csv, summary, walk_forward, validate
 from capture_bridge import CapturePage
 from event_report import build_report
 from round_store import RoundStore
+from live_round_store import LiveRoundStore
 
 
 class Window(QMainWindow):
@@ -27,6 +28,7 @@ class Window(QMainWindow):
         )
         path = Path(directory or str(Path.home() / ".crash-flight-pro"))
         self.store = RoundStore(path / "rounds.json")
+        self.live_store = LiveRoundStore(path / "live_rounds.json")
 
         root = QWidget()
         layout = QVBoxLayout(root)
@@ -60,6 +62,8 @@ class Window(QMainWindow):
         self.capture_status = QLabel("Capture OFF. Enable and reload game to observe events.")
         self.capture_status.setWordWrap(True)
         side.addWidget(self.capture_status)
+        self.live_status = QLabel("Completed live rounds: 0")
+        side.addWidget(self.live_status)
         report_button = QPushButton("Export sanitized timing report")
         report_button.clicked.connect(self.export_event_report)
         side.addWidget(report_button)
@@ -104,6 +108,8 @@ class Window(QMainWindow):
             self.browser.reload()
 
     def capture_event(self, record):
+        if self.live_store.add_event(record):
+            self.update_report()
         self.capture_status.setText(
             f"Captured {self.capture_page.events_seen} sanitized events. "
             f"Latest: {record['target']} round {record.get('l', '?')}"
@@ -184,16 +190,18 @@ class Window(QMainWindow):
             self.update_report()
 
     def update_report(self):
-        stats = summary(self.store.rounds)
+        self.live_status.setText(f"Completed live rounds: {self.live_store.count} (deduplicated)")
+        combined = self.store.rounds + self.live_store.values
+        stats = summary(combined)
         if stats is None:
             self.report.setPlainText(
-                "No historical rounds yet. Import CSV or add completed rounds.\n"
+                "No historical rounds yet. Import CSV or enable capture to collect completed rounds.\n"
                 "Next round: UNKNOWN"
             )
             return
-        evaluation = walk_forward(self.store.rounds)
+        evaluation = walk_forward(combined)
         lines = [
-            f"Rounds: {stats['count']}",
+            f"Rounds: {stats['count']} (manual/imported {len(self.store.rounds)}, live {self.live_store.count})",
             f"Historical median: {stats['median']:.2f}x",
             f"Last 30 median: {stats['recent_median']:.2f}x",
             f"Below 2x (observed): {stats['below_2']:.1%}",
