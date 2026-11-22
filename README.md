@@ -38,3 +38,22 @@ multiplier
 CSV imports append rows. Identical multipliers are retained because repeated numerical results may represent different rounds. Do not import the same CSV twice unless you want duplicates. There is no automatic connection to 1xBet game data yet.
 
 **Security:** Never publish credentials, recovery codes, browser cookies, or GitHub tokens. Browser website compatibility and Windows packaging have not been verified on a Windows machine.
+
+## Offline message structure inspection (experimental)
+
+Use only messages you are authorized to export. Remove session identifiers, cookies, tokens, account details and other private fields **before** creating or sharing the file. The tool does not connect to 1xBet or capture traffic.
+
+Example `messages.jsonl`:
+
+```jsonl
+{"timestamp":"2026-11-22T12:00:00.000Z","direction":"received","payload":{"event":"round_start","round_id":"example"}}
+{"timestamp":"2026-11-22T12:00:07.000Z","direction":"received","payload":{"event":"round_end","multiplier":2.4}}
+```
+
+These are illustrative message names, **not confirmed 1xBet protocol fields**. Run:
+
+```powershell
+py message_inspector.py messages.jsonl --output message_report.json
+```
+
+The report summarizes payload shapes and timestamps; it does not infer future crash outcomes. Do not publish raw network captures, even if the report itself masks sensitive-looking field names.
