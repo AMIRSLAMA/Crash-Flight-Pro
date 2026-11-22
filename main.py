@@ -6,11 +6,14 @@ from PySide6.QtCore import QStandardPaths, QUrl
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QHBoxLayout, QLabel, QLineEdit,
     QMainWindow, QMessageBox, QPushButton, QTextEdit, QVBoxLayout,
+    QCheckBox,
     QWidget, QSplitter,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from analysis_engine import read_csv, summary, walk_forward, validate
+from capture_bridge import CapturePage
+from event_report import build_report
 from round_store import RoundStore
 
 
@@ -39,6 +42,10 @@ class Window(QMainWindow):
 
         splitter = QSplitter()
         self.browser = QWebEngineView()
+        self.capture_page = CapturePage(self.browser.page().profile(), path / "captured_events.jsonl", self.browser)
+        self.capture_page.install_capture()
+        self.capture_page.on_event = self.capture_event
+        self.browser.setPage(self.capture_page)
         self.browser.urlChanged.connect(
             lambda url: self.address.setText(url.toString())
         )
@@ -47,6 +54,15 @@ class Window(QMainWindow):
         sidebar = QWidget()
         side = QVBoxLayout(sidebar)
         side.addWidget(QLabel("Historical analysis — next round unknown"))
+        self.capture_toggle = QCheckBox("Capture sanitized game events (experimental)")
+        self.capture_toggle.toggled.connect(self.toggle_capture)
+        side.addWidget(self.capture_toggle)
+        self.capture_status = QLabel("Capture OFF. Enable and reload game to observe events.")
+        self.capture_status.setWordWrap(True)
+        side.addWidget(self.capture_status)
+        report_button = QPushButton("Export sanitized timing report")
+        report_button.clicked.connect(self.export_event_report)
+        side.addWidget(report_button)
 
         load_button = QPushButton("Import CSV")
         load_button.clicked.connect(self.load_csv)
@@ -77,6 +93,44 @@ class Window(QMainWindow):
         layout.addWidget(splitter)
         self.setCentralWidget(root)
         self.update_report()
+
+    def toggle_capture(self, enabled):
+        self.capture_page.capture_enabled = enabled
+        self.capture_status.setText(
+            "Capture ON. Reload the game page to activate the observer."
+            if enabled else "Capture OFF. No new events will be saved."
+        )
+        if enabled and not self.browser.url().isEmpty():
+            self.browser.reload()
+
+    def capture_event(self, record):
+        self.capture_status.setText(
+            f"Captured {self.capture_page.events_seen} sanitized events. "
+            f"Latest: {record['target']} round {record.get('l', '?')}"
+        )
+
+    def export_event_report(self):
+        source = self.capture_page.store_path
+        if not source.exists():
+            QMessageBox.information(self, "No events", "No events captured yet.")
+            return
+        destination, _ = QFileDialog.getSaveFileName(
+            self, "Save sanitized report", "event_report.json", "JSON files (*.json)"
+        )
+        if not destination:
+            return
+        try:
+            import json
+            report = build_report(source)
+            Path(destination).write_text(
+                json.dumps(report, indent=2), encoding="utf-8"
+            )
+            QMessageBox.information(
+                self, "Report ready",
+                "Report saved locally. Review its contents before sharing."
+            )
+        except (OSError, ValueError, TypeError) as exc:
+            QMessageBox.warning(self, "Report failed", str(exc))
 
     def open_url(self):
         parsed = QUrl(self.address.text().strip())
