@@ -71,7 +71,7 @@ class Window(QMainWindow):
         self.upcoming_status = QLabel(self.upcoming.display)
         self.upcoming_status.setWordWrap(True)
         side.addWidget(self.upcoming_status)
-        self.audit_status = QLabel(self.pre_crash_audit.latest)
+        self.fairness_seen = set()\n        self.fairness_status = QLabel("Fairness fields: NOT OBSERVED (known names only)")\n        self.fairness_status.setWordWrap(True)\n        side.addWidget(self.fairness_status)\n        self.audit_status = QLabel(self.pre_crash_audit.latest)
         self.audit_status.setWordWrap(True)
         side.addWidget(self.audit_status)
         report_button = QPushButton("Export sanitized timing report")
@@ -118,7 +118,7 @@ class Window(QMainWindow):
             self.browser.reload()
 
     def capture_event(self, record):
-        self.upcoming.observe(record)
+        self.fairness_seen.update(record.get("fairness_fields", []))\n        if self.fairness_seen:\n            self.fairness_status.setText("Fairness field names seen: " + ", ".join(sorted(self.fairness_seen)) + " (values NOT captured)")\n        self.upcoming.observe(record)
         self.pre_crash_audit.observe(record)
         self.audit_status.setText(self.pre_crash_audit.latest)
         self.upcoming_status.setText(self.upcoming.display)
