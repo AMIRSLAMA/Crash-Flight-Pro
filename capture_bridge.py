@@ -52,6 +52,12 @@ SCRIPT = r"""
             if (final !== null && final >= 1) event.p = final;
           }
         }
+        if (message.target === 'OnStage' || message.target === 'OnBetting') {
+          // Audit whether an explicit pre-start final-X field is actually sent.
+          // This does NOT infer a result from a sequential round ID.
+          const candidate = finiteNumber(a.f);
+          if (candidate !== null && candidate >= 1) event.f = candidate;
+        }
         if (message.target === 'OnCrash') {
           const final = finiteNumber(a.f);
           if (final !== null && final >= 1) event.f = final;
