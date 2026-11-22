@@ -66,7 +66,11 @@ SCRIPT = r"""
           const windowMs = finiteNumber(a.a);
           if (windowMs !== null && windowMs >= 0) event.a = windowMs;
         }
-        // Only report presence of known fairness metadata, never seed values.\n        const fairnessKeys = ['serverSeed','server_seed','serverSeedHash','server_seed_hash','clientSeed','client_seed','nonce'];\n        const found = fairnessKeys.filter(k => Object.prototype.hasOwnProperty.call(a,k));\n        if (found.length) event.fairness_fields = found;\n        // Do not collect account info, betting details, headers, URLs or raw frames.
+        // Only report presence of known fairness metadata, never seed values.
+        const fairnessKeys = ['serverSeed','server_seed','serverSeedHash','server_seed_hash','clientSeed','client_seed','nonce'];
+        const found = fairnessKeys.filter(k => Object.prototype.hasOwnProperty.call(a,k));
+        if (found.length) event.fairness_fields = found;
+        // Do not collect account info, betting details, headers, URLs or raw frames.
         console.info('__CFP_EVENT__' + JSON.stringify(event));
       }
     }
@@ -111,7 +115,11 @@ class CapturePage(QWebEnginePage):
             permitted = {"target", "l", "ln", "ts", "f", "s", "p", "a", "fairness_fields"}
             if any(key not in permitted for key in data):
                 return
-            fields = data.get("fairness_fields", [])\n            allowed_fields = {"serverSeed", "server_seed", "serverSeedHash", "server_seed_hash", "clientSeed", "client_seed", "nonce"}\n            if not isinstance(fields, list) or len(fields) > 7 or any(not isinstance(f, str) or f not in allowed_fields for f in fields):\n                return\n            record = {
+            fields = data.get("fairness_fields", [])
+            allowed_fields = {"serverSeed", "server_seed", "serverSeedHash", "server_seed_hash", "clientSeed", "client_seed", "nonce"}
+            if not isinstance(fields, list) or len(fields) > 7 or any(not isinstance(f, str) or f not in allowed_fields for f in fields):
+                return
+            record = {
                 "received_at_utc": datetime.now(timezone.utc).isoformat(),
                 **data,
             }
