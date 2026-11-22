@@ -17,6 +17,7 @@ from event_report import build_report
 from round_store import RoundStore
 from live_round_store import LiveRoundStore
 from upcoming_round import UpcomingRound
+from pre_crash_audit import PreCrashAudit
 
 
 class Window(QMainWindow):
@@ -31,6 +32,7 @@ class Window(QMainWindow):
         self.store = RoundStore(path / "rounds.json")
         self.live_store = LiveRoundStore(path / "live_rounds.json")
         self.upcoming = UpcomingRound()
+        self.pre_crash_audit = PreCrashAudit()
 
         root = QWidget()
         layout = QVBoxLayout(root)
@@ -69,6 +71,9 @@ class Window(QMainWindow):
         self.upcoming_status = QLabel(self.upcoming.display)
         self.upcoming_status.setWordWrap(True)
         side.addWidget(self.upcoming_status)
+        self.audit_status = QLabel(self.pre_crash_audit.latest)
+        self.audit_status.setWordWrap(True)
+        side.addWidget(self.audit_status)
         report_button = QPushButton("Export sanitized timing report")
         report_button.clicked.connect(self.export_event_report)
         side.addWidget(report_button)
@@ -114,6 +119,8 @@ class Window(QMainWindow):
 
     def capture_event(self, record):
         self.upcoming.observe(record)
+        self.pre_crash_audit.observe(record)
+        self.audit_status.setText(self.pre_crash_audit.latest)
         self.upcoming_status.setText(self.upcoming.display)
         if self.live_store.add_event(record):
             self.update_report()
