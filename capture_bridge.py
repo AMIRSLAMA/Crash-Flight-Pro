@@ -68,7 +68,11 @@ SCRIPT = r"""
         }
         // Only report presence of known fairness metadata, never seed values.
         const fairnessKeys = ['serverSeed','server_seed','serverSeedHash','server_seed_hash','clientSeed','client_seed','nonce'];
-        const found = fairnessKeys.filter(k => Object.prototype.hasOwnProperty.call(a,k));
+        // Inspect only field NAMES in round events; never forward field values.
+        const found = Object.keys(a).filter(k =>
+          typeof k === 'string' && k.length <= 64 &&
+          /(?:seed|hash|nonce|fair|provab)/i.test(k)
+        ).slice(0, 12);
         if (found.length) event.fairness_fields = found;
         // Do not collect account info, betting details, headers, URLs or raw frames.
         console.info('__CFP_EVENT__' + JSON.stringify(event));
@@ -116,8 +120,9 @@ class CapturePage(QWebEnginePage):
             if any(key not in permitted for key in data):
                 return
             fields = data.get("fairness_fields", [])
-            allowed_fields = {"serverSeed", "server_seed", "serverSeedHash", "server_seed_hash", "clientSeed", "client_seed", "nonce"}
-            if not isinstance(fields, list) or len(fields) > 7 or any(not isinstance(f, str) or f not in allowed_fields for f in fields):
+            import re
+            allowed_field = re.compile(r"^[A-Za-z0-9_\-]{1,64}$")
+            if not isinstance(fields, list) or len(fields) > 12 or any(not isinstance(f, str) or not allowed_field.fullmatch(f) or not re.search(r"seed|hash|nonce|fair|provab", f, re.I) for f in fields):
                 return
             record = {
                 "received_at_utc": datetime.now(timezone.utc).isoformat(),
