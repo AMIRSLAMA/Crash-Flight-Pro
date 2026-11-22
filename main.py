@@ -16,6 +16,7 @@ from capture_bridge import CapturePage
 from event_report import build_report
 from round_store import RoundStore
 from live_round_store import LiveRoundStore
+from upcoming_round import UpcomingRound
 
 
 class Window(QMainWindow):
@@ -29,6 +30,7 @@ class Window(QMainWindow):
         path = Path(directory or str(Path.home() / ".crash-flight-pro"))
         self.store = RoundStore(path / "rounds.json")
         self.live_store = LiveRoundStore(path / "live_rounds.json")
+        self.upcoming = UpcomingRound()
 
         root = QWidget()
         layout = QVBoxLayout(root)
@@ -64,6 +66,9 @@ class Window(QMainWindow):
         side.addWidget(self.capture_status)
         self.live_status = QLabel("Completed live rounds: 0")
         side.addWidget(self.live_status)
+        self.upcoming_status = QLabel(self.upcoming.display)
+        self.upcoming_status.setWordWrap(True)
+        side.addWidget(self.upcoming_status)
         report_button = QPushButton("Export sanitized timing report")
         report_button.clicked.connect(self.export_event_report)
         side.addWidget(report_button)
@@ -108,6 +113,8 @@ class Window(QMainWindow):
             self.browser.reload()
 
     def capture_event(self, record):
+        self.upcoming.observe(record)
+        self.upcoming_status.setText(self.upcoming.display)
         if self.live_store.add_event(record):
             self.update_report()
         self.capture_status.setText(
