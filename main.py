@@ -1,4 +1,6 @@
 import csv
+import hashlib
+import hmac
 import sys
 from pathlib import Path
 
@@ -75,6 +77,11 @@ class Window(QMainWindow):
         self.fairness_status = QLabel("Fairness fields: NOT OBSERVED (known names only)")
         self.fairness_status.setWordWrap(True)
         side.addWidget(self.fairness_status)
+        self.demo_nonce = 0
+        self.demo_round_ids = set()
+        self.demo_status = QLabel('Calculated Crash (DEMO): waiting for OnStart')
+        self.demo_status.setWordWrap(True)
+        side.addWidget(self.demo_status)
         self.audit_status = QLabel(self.pre_crash_audit.latest)
         self.audit_status.setWordWrap(True)
         side.addWidget(self.audit_status)
@@ -122,6 +129,19 @@ class Window(QMainWindow):
             self.browser.reload()
 
     def capture_event(self, record):
+        if record.get('target') == 'OnStart':
+            round_id = record.get('l')
+            if round_id is not None and round_id not in self.demo_round_ids:
+                self.demo_round_ids.add(round_id)
+                self.demo_nonce += 1
+                message = f'test:{self.demo_nonce}'.encode('utf-8')
+                digest = hmac.new(b'demo', message, hashlib.sha256).digest()
+                fraction = int.from_bytes(digest[:8], 'big') / (1 << 64)
+                demo_value = max(1.0, min(10000.0, 0.99 / max(1e-12, 1.0 - fraction)))
+                self.demo_status.setText(
+                    f'Calculated Crash (DEMO): {demo_value:.2f}x | Round {round_id} | Nonce {self.demo_nonce} '
+                    '(not a real game prediction)'
+                )
         self.fairness_seen.update(record.get("fairness_fields", []))
         if self.fairness_seen:
             self.fairness_status.setText("Fairness field names seen: " + ", ".join(sorted(self.fairness_seen)) + " (values NOT captured)")
