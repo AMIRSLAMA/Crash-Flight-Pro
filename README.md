@@ -67,3 +67,11 @@ The report summarizes payload shapes and timestamps; it does not infer future cr
 5. Inspect the report before sharing. **Never upload raw frames, browser profiles, or credentials to this public repository.**
 
 Capture uses an opt-in JavaScript observer for WebSocket message events, recognizes only the known SignalR target names, and saves only `target`, numeric `l`, `ln`, `ts`, and final `f` plus a local UTC receipt timestamp. It does not capture all network protocols and may not work on this site. Capture is off by default; disabling stops recording, but reloading the page is recommended to remove the in-page observer. A report describes observed round durations, **not** UI animation delays or next-round results. No automatic upload to GitHub is implemented. The integration is not yet tested on Windows.
+
+## Windows EXE download
+
+GitHub Actions is configured to build the Windows app on a Windows runner whenever Python files change, and also on manual dispatch. Open [Actions](https://github.com/AMIRSLAMA/Crash-Flight-Pro/actions/workflows/build-windows.yml), select a successful **Build Windows EXE** run, and download the **CrashFlightPro-Windows** artifact. Unzip both the outer artifact and the included `CrashFlightPro-Windows.zip`, then run `CrashFlightPro.exe` inside the `CrashFlightPro` folder. Keep all accompanying files together.
+
+Alternatively download the source repository and double-click `build_windows.bat` on Windows with Python 3.11+ installed. The executable will be in `dist\\CrashFlightPro\\CrashFlightPro.exe`.
+
+**Status:** Workflow has been committed; a successful CI build and actual Windows launch must be verified before calling the EXE ready. This is a PyInstaller one-folder build, not a signed installer. Windows may warn about unsigned apps.
