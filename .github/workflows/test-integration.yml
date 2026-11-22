@@ -1,0 +1,24 @@
+name: Validate Windows live capture integration
+on:
+  push:
+    branches:
+      - feature/windows-live-round-integration-20261122
+  pull_request:
+    paths:
+      - "**/*.py"
+      - "tests/**"
+      - ".github/workflows/test-integration.yml"
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate syntax
+        run: python -m compileall -q main.py capture_bridge.py event_report.py live_round_store.py
+      - name: Execute unit tests
+        run: python -m unittest discover -s tests -v
