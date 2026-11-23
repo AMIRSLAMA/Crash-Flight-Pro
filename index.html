@@ -23,8 +23,12 @@ button:disabled{opacity:.55;cursor:wait}
  <section style="width:100%">
   <div class="label">رقم الجولة القادمة</div>
   <div class="round" id="nextRound">—</div>
-  <div class="label" style="font-size:11px">رقم الحساب</div>
-  <div id="accountId" style="font-size:13px;color:#f6c45b;direction:ltr;overflow-wrap:anywhere">لم يُرصد بعد</div>
+  <div class="label" style="font-size:11px">رقم حسابك</div>
+  <div style="display:flex;gap:6px;width:100%;margin-top:6px">
+   <input id="accountIdInput" type="text" inputmode="numeric" autocomplete="off" placeholder="اكتب رقم حسابك" aria-label="رقم حسابك" style="min-width:0;flex:1;border:1px solid #40536d;border-radius:9px;background:#091321;color:#fff;padding:9px;text-align:center;font-size:14px;direction:ltr">
+   <button id="saveAccount" type="button" style="width:auto;padding:9px 12px;border-radius:9px;font-size:12px">حفظ</button>
+  </div>
+  <div id="accountStatus" style="font-size:10px;color:#9eafc4;margin-top:4px;min-height:13px">يُحفظ محليًا في هذا المتصفح فقط</div>
  </section>
  <div class="divider"></div>
  <section style="width:100%">
@@ -41,14 +45,23 @@ button:disabled{opacity:.55;cursor:wait}
 const $=id=>document.getElementById(id);
 let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, activeRequestId=null;
 function askForEvents(){activeRequestId=String(Date.now())+"-"+Math.random().toString(36).slice(2);window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:activeRequestId},"*");}
+const accountInput=$("accountIdInput"), accountStatus=$("accountStatus");
+try{accountInput.value=localStorage.getItem("crashFlightAccountId")||"";}catch(_){}
+$("saveAccount").addEventListener("click",()=>{
+ const value=accountInput.value.trim();
+ if(value&&!/^\\d{4,20}$/.test(value)){accountStatus.textContent="اكتب رقم الحساب بالأرقام فقط.";return;}
+ try{
+  if(value)localStorage.setItem("crashFlightAccountId",value);
+  else localStorage.removeItem("crashFlightAccountId");
+  accountStatus.textContent=value?"تم حفظ رقم حسابك محليًا على هذا المتصفح.":"تم مسح رقم الحساب المحفوظ.";
+ }catch(_){accountStatus.textContent="تعذر الحفظ المحلي؛ تحقق من إعدادات المتصفح.";}
+});
 function readEvents(events){
  if(!Array.isArray(events))return;
  crashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000).slice(-200);
  const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
  const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
  nextRound=betting?.roundId??stage?.roundId??null;
- const accountEvent=[...events].reverse().find(e=>e&&typeof e.accountId==="string"&&e.accountId.length>0);
- $("accountId").textContent=accountEvent?accountEvent.accountId:"لم يُرصد في رسائل اللعبة";
  if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
 }function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
