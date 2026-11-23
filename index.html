@@ -119,8 +119,17 @@ window.addEventListener("message",e=>{
   if(requestPending){
    requestPending=false;clearTimeout(requestTimer);
    $("predict").disabled=false;
-   const ok=calculate();
-   $("status").textContent=ok?"تم حساب رقم واحد بناءً على السجل الحالي.":"لم يكتمل الحساب؛ راجع سبب نقص البيانات.";
+   try{
+    const ok=calculate();
+    $("status").textContent=ok?"تم حساب رقم واحد بناءً على السجل الحالي.":"لم يكتمل الحساب؛ راجع سبب نقص البيانات.";
+   }catch(err){
+    $("forecast").textContent="تعذر الحساب";
+    $("meta").textContent="حدث خطأ أثناء التحليل؛ لم يتم تغيير سجل النتائج.";
+    $("status").textContent="حصل خطأ في المعادلة. الزر متاح لإعادة المحاولة.";
+    console.error("Crash Flight calculation error:",err);
+   }finally{
+    $("predict").disabled=false;
+   }
   }
  }
  if(e.data.type==="unavailable"){
@@ -131,7 +140,13 @@ window.addEventListener("message",e=>{
 $("predict").addEventListener("click",()=>{
  if(requestPending)return;
  $("predict").disabled=true;$("status").textContent="جارٍ جلب النتائج بطلبك...";
- requestPending=true;askForEvents();
+ requestPending=true;
+ try{askForEvents();}catch(err){
+  requestPending=false;$("predict").disabled=false;
+  $("status").textContent="تعذر الاتصال بالإضافة؛ الزر جاهز لإعادة المحاولة.";
+  console.error("Crash Flight extension request error:",err);
+  return;
+ }
  requestTimer=window.setTimeout(()=>{
   if(requestPending){requestPending=false;$("predict").disabled=false;$("status").textContent="لم يصل رد من الإضافة. تأكد أنها متصلة ثم حاول مجددًا.";}
  },2500);
