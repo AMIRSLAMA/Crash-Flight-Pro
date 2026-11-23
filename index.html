@@ -55,8 +55,13 @@ function calculate(){
  const sample=crashes.slice(-30);
  const candidates=[0.25,0.35,0.45,0.50,0.55,0.65,0.75];
  const quantile=(values,q)=>{
-  const sorted=[...values].sort((a,b)=>a-b);
-  return sorted[Math.max(0,Math.min(sorted.length-1,Math.round(q*(sorted.length-1))))];
+  // Give newer rounds more influence than older ones.
+  const sorted=values.map((value,index)=>({value,weight:index+1})).sort((a,b)=>a.value-b.value);
+  const total=sorted.reduce((sum,item)=>sum+item.weight,0);
+  const target=q*total;
+  let accumulated=0;
+  for(const item of sorted){accumulated+=item.weight;if(accumulated>=target)return item.value;}
+  return sorted[sorted.length-1].value;
  };
  const scores=candidates.map(q=>{
   const errors=[];
@@ -75,7 +80,7 @@ function calculate(){
  const highCount=sample.filter(n=>n>=5).length;
  const testCount=Math.max(0,sample.length-10);
  $("forecast").textContent=estimate.toFixed(2)+"x";
- $("meta").textContent="اختيرت طريقة الشريحة "+Math.round(best.q*100)+"% بعد اختبارها على "+testCount+" جولة سابقة من سجلك، باستخدام الجولات الأقدم فقط. آخر "+sample.length+" جولة؛ منها "+highCount+" نتائج 5x فأكثر. الاختبار التاريخي لا يضمن الجولة التالية.";
+ $("meta").textContent="اختيرت الشريحة "+Math.round(best.q*100)+"% باختبار تاريخي، مع وزن أكبر للجولات الأحدث حتى يستجيب التقدير لتغير النتائج. آخر "+sample.length+" جولة؛ منها "+highCount+" نتائج 5x فأكثر. قد يتكرر الرقم إذا دعمت البيانات نفس التقدير، ولا يضمن الاختبار الجولة التالية.";
  return true;
 }
 window.addEventListener("message",e=>{
