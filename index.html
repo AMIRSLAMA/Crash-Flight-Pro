@@ -38,12 +38,12 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 </div>
 <aside class="signal">
 <div class="alert-icon">⚠</div><h2 id="signalTitle">لا توجد إشارة مبكرة</h2>
-<p id="signalText">مراقبة الجولة<br>بانتظار بيانات حقيقية</p>
-<div class="sub">حركة الطائرة توضح زمن الجولة فقط عند غياب قراءة المضاعف الحي؛ وليست توقعًا</div>
+<p id="signalText">رصد أحداث ما قبل الجولة<br>بدون توقع للنتيجة</p>
+<div class="sub">الرسائل قبل الجولة تُعرض كما وردت من اللعبة. لا توجد بيانات مثبتة لتوقع المضاعف القادم.</div>
 </aside>
 </div>
 <div class="bottom">
-<div class="info"><label>رقم الجولة</label><strong id="roundNumber">—</strong></div>
+<div class="info"><label>معرّف الجولة المرصود</label><strong id="roundNumber">—</strong></div>
 <div class="info"><label>حالة الاتصال</label><strong class="green" id="connection">جاهز</strong></div>
 <button id="start">تحديث الاتصال</button>
 </div>
@@ -57,7 +57,7 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let active=false,results=[],lastEventAt=0,currentMultiplier=null,flightStartedAt=0,flightTimer=null;
+let active=false,results=[],lastEventAt=0,currentMultiplier=null,flightStartedAt=0,flightTimer=null,preRoundEvents=0,lastStageId=null,lastBettingRoundId=null;
 const seen=new Set();
 function setSignal(title,html){$("signalTitle").textContent=title;$("signalText").innerHTML=html;}
 function drawFlight(on){
@@ -97,7 +97,7 @@ function handleEvents(events){
   if(!e||!e.target)continue;
   const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
   if(seen.has(key))continue;seen.add(key);lastEventAt=Math.max(lastEventAt,Number(e.receivedAt)||0);
-  if(e.target==="OnStart"){
+  if(e.target==="OnStage"&&!active){preRoundEvents++;lastStageId=e.ln??e.roundId??null;setSignal("رصد مرحلة قبل الجولة","آخر معرّف مرحلة: "+(lastStageId??"غير متاح")+" · رسائل قبل البداية: "+preRoundEvents);$("connection").textContent="رصد مرحلة ما قبل الجولة";$("connection").className="green";}else if(e.target==="OnStart"){
    active=true;currentMultiplier=null;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"—";
    $("connection").textContent="بداية الجولة مرصودة";$("connection").className="green";
    $("multiplierDisplay").innerHTML="—<small>x</small>";drawFlight(true);
@@ -109,7 +109,8 @@ function handleEvents(events){
    $("connection").textContent="وصل حدث نهاية الجولة";$("connection").className="";
    setSignal("انتهت الجولة","تم التقاط رسالة نهاية الجولة. هذا حدث بعد الانفجار وليس إنذارًا مسبقًا.");
   }else if(e.target==="OnBetting"&&!active){
-   $("connection").textContent="استقبال أحداث اللعبة";setSignal("مرحلة الرهان","تم رصد مرحلة ما قبل بدء الجولة؛ لا تعني معرفة نتيجة الانفجار.");
+   preRoundEvents++;lastBettingRoundId=e.roundId??null;if(lastBettingRoundId!==null)$("roundNumber").textContent="#"+lastBettingRoundId;
+   $("connection").textContent="استقبال أحداث ما قبل الجولة";setSignal("مرحلة الرهان","معرّف الجولة المرصود: "+(lastBettingRoundId??"غير متاح")+" · رسائل قبل البداية: "+preRoundEvents+"<br>هذه بيانات متابعة وليست تنبؤًا.");
   }else{
    const mult=liveMultiplier(e);
    if(mult!==null&&active){
