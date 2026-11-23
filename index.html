@@ -57,7 +57,7 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let active=false,results=[],lastEventAt=0,currentMultiplier=null,preRoundEvents=0,lastStageId=null,lastBettingRoundId=null;
+let active=false,results=[],lastEventAt=0,currentMultiplier=null,preRoundEvents=0,lastStageId=null,lastBettingRoundId=null,observedCrashes=[];
 const seen=new Set();
 function setSignal(title,text){$("signalTitle").textContent=title;$("signalText").textContent=text;}
 function drawFlight(on){
@@ -74,7 +74,8 @@ function updatePlane(multiplier){
  const n=Math.max(1,Math.min(100000,Number(multiplier)||1));
  updatePlaneProgress(Math.max(0,Math.min(1,Math.log(n)/Math.log(30))));
 }
-function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}\nfunction metricSummary(e){const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};const entries=Object.entries(m).filter(([k,v])=>typeof v==="number"&&Number.isFinite(v)).slice(0,5);return entries.map(([k,v])=>k+": "+v).join(" · ");}
+function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}
+function metricSummary(e){const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};const entries=Object.entries(m).filter(([k,v])=>typeof v==="number"&&Number.isFinite(v)).slice(0,5);return entries.map(([k,v])=>k+": "+v).join(" · ");}
 function liveMultiplier(e){
  const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};
  for(const [key,value] of Object.entries(m)){
@@ -84,8 +85,21 @@ function liveMultiplier(e){
  }
  return null;
 }
+function estimateHistoricalRisk(current){
+ const sample=observedCrashes.filter(n=>Number.isFinite(n)&&n>=1);
+ if(sample.length<30)return {ready:false,count:sample.length};
+ const survived=sample.filter(n=>n>current);
+ const nextBand=survived.filter(n=>n<=current+0.5).length;
+ return {ready:survived.length>=15,count:sample.length,atRisk:survived.length,percent:survived.length?Math.round(nextBand/survived.length*100):100};
+}
+function showRisk(current){
+ const r=estimateHistoricalRisk(current);
+ if(!r.ready){setSignal("مؤشر تجريبي غير متاح","المضاعف الحالي: "+current.toFixed(2)+"x\nنحتاج 30 نتيجة مرصودة على الأقل، و15 جولة تجاوزت هذا المضاعف.\nلا توجد إشارة موثوقة للانفجار القادم.");return;}
+ setSignal("مؤشر مخاطرة تاريخي · تجريبي","المضاعف الحالي: "+current.toFixed(2)+"x\n"+r.percent+"% من الجولات التاريخية التي تجاوزت هذا المضاعف انتهت خلال الـ 0.5x التالية.\nالعينة: "+r.count+" جولة · الناجية حتى هذا المضاعف: "+r.atRisk+"\nهذا معدل تاريخي وليس توقعًا مؤكدًا للجولة الحالية.");
+}
 function handleEvents(events){
  if(!Array.isArray(events))return;
+ observedCrashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000);
  for(const e of events){
   if(!e||!e.target)continue;
   const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
@@ -100,7 +114,7 @@ function handleEvents(events){
    const mult=Number(e.f);
    if(Number.isFinite(mult)&&mult>=1){currentMultiplier=mult;$("multiplierDisplay").innerHTML=mult.toFixed(2)+'<small>x</small>';results.push(mult);$("history").hidden=false;$("history").textContent="آخر نتيجة مرصودة: "+mult.toFixed(2)+"x";updatePlane(mult);}
    $("connection").textContent="وصل حدث نهاية الجولة";$("connection").className="";
-   setSignal("انتهت الجولة","تم التقاط رسالة نهاية الجولة. هذا حدث بعد الانفجار وليس إنذارًا مسبقًا.");
+   setSignal("انتهت الجولة","النتيجة المسجلة: "+(Number.isFinite(mult)?mult.toFixed(2)+"x":"غير متاحة")+"\nتم حفظها ضمن العينة التاريخية. المؤشر التاريخي لا يضمن الجولة التالية.");
   }else if(e.target==="OnBetting"&&!active){
    preRoundEvents++;lastBettingRoundId=e.roundId??null;if(lastBettingRoundId!==null)$("roundNumber").textContent="#"+lastBettingRoundId;
    $("connection").textContent="استقبال أحداث ما قبل الجولة";setSignal("مرحلة الرهان","معرّف الجولة المرصود: "+(lastBettingRoundId??"غير متاح")+" · أحداث قبل البداية: "+preRoundEvents+(metricSummary(e)?"\n"+metricSummary(e):"")+"\nبيانات متابعة وليست تنبؤًا.");
@@ -110,7 +124,7 @@ function handleEvents(events){
     currentMultiplier=mult;updatePlane(mult);
     $("multiplierDisplay").innerHTML=mult.toFixed(2)+'<small>x</small>';
     $("connection").textContent="مضاعف حي مرصود";$("connection").className="green";
-    setSignal("بيانات الجولة مباشرة","المضاعف المعروض قراءة من رسالة اللعبة، وليس توقعًا للانفجار.");
+    showRisk(mult);
    }else if(active&&e.metrics&&Object.keys(e.metrics).length){
     $("connection").textContent="بيانات الجولة تُسجّل";$("connection").className="green";
    }
