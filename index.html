@@ -30,7 +30,7 @@ button:disabled{opacity:.55;cursor:wait}
   <div class="forecast" id="forecast">—</div>
   <div class="meta" id="meta">اضغط الزر بنفسك قبل بداية الجولة لحساب تقدير جديد.</div>
  </section>
- <button id="predict" hidden>احسب توقع الجولة القادمة</button>
+ <button id="predict">احسب توقع الجولة القادمة</button>
  <div class="status" id="status">في انتظار طلبك</div>
  <div class="note">تقدير إحصائي من النتائج المسجلة، وليس معرفة مسبقة أو ضمانًا للنتيجة.</div>
 </main>
@@ -99,7 +99,7 @@ window.addEventListener("message",e=>{
   const lastCrash=[...allEvents].reverse().find(ev=>ev&&ev.target==="OnCrash");
   const lastRoundStart=[...allEvents].reverse().find(ev=>ev&&(["OnStage","OnBetting","OnStart"].indexOf(ev.target)>=0));
   roundFinished=!!lastCrash&&(!lastRoundStart||Number(lastCrash.receivedAt)>Number(lastRoundStart.receivedAt));
-  $("predict").hidden=!roundFinished;
+  $("predict").hidden=false;
   if(requestPending){
    requestPending=false;clearTimeout(requestTimer);
    $("predict").disabled=false;
