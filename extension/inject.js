@@ -38,11 +38,15 @@
   }catch(_){}
  }
  const Native=window.WebSocket;if(typeof Native!=="function")return;
+ function reportTransport(kind,byteLength){
+  window.postMessage({source:"crash-flight-pro-capture",event:{kind:"transport",target:"__transport__",transportType:kind,byteLength:Number.isFinite(byteLength)?byteLength:0}},"*");
+ }
  class ObservedWebSocket extends Native{
-  constructor(...args){super(...args);this.addEventListener("message",e=>{
-   if(typeof e.data==="string")handle(e.data);
-   else if(e.data instanceof ArrayBuffer)handleBinary(e.data);
-   else if(typeof Blob!=="undefined"&&e.data instanceof Blob)e.data.arrayBuffer().then(handleBinary).catch(()=>{});
+  constructor(...args){super(...args);reportTransport("websocket-open",0);this.addEventListener("message",e=>{
+   if(typeof e.data==="string"){reportTransport("text",e.data.length);handle(e.data);}
+   else if(e.data instanceof ArrayBuffer){reportTransport("arraybuffer",e.data.byteLength);handleBinary(e.data);}
+   else if(typeof Blob!=="undefined"&&e.data instanceof Blob){reportTransport("blob",e.data.size);e.data.arrayBuffer().then(handleBinary).catch(()=>{});}
+   else reportTransport("other",0);
   });}
  }
  Object.defineProperty(ObservedWebSocket,"name",{value:"WebSocket"});
