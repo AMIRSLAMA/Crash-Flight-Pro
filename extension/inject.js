@@ -12,6 +12,16 @@
    }else if(val&&typeof val==="object")extractMetrics(val,out,depth+1);
   }
  }
+ function describeShape(value,out,path="$",depth=0){
+  if(depth>5||out.length>=120||value==null)return;
+  if(Array.isArray(value)){out.push(path+":array["+Math.min(value.length,100)+"]");for(let i=0;i<Math.min(value.length,12);i++)describeShape(value[i],out,path+"["+i+"]",depth+1);return;}
+  if(typeof value!=="object"){out.push(path+":"+typeof value);return;}
+  for(const [key,val] of Object.entries(value).slice(0,60)){
+   const safeKey=String(key).replace(/[^a-zA-Z0-9_$-]/g,"_").slice(0,40);
+   describeShape(val,out,path+"."+safeKey,depth+1);
+   if(out.length>=120)break;
+  }
+ }
  function handle(raw){
   if(typeof raw!=="string")return;
   for(const part of raw.split("\x1e")){
@@ -22,7 +32,8 @@
     const target=m.target;if(!TARGETS.has(target)&&!RELEVANT.test(target))continue;
     const args=Array.isArray(m.arguments)?m.arguments:[];
     const metrics={};extractMetrics(args,metrics);extractMetrics(m,metrics);
-    const event={target,argCount:args.length,metrics};
+    const shape=[];describeShape(args,shape);
+    const event={target,argCount:args.length,metrics,shape};
     const payload=args.find(a=>a&&typeof a==="object")||{};
     for(const key of ["l","ln","ts"]){const val=payload[key]??m[key];if(typeof val==="number"&&Number.isFinite(val))event[key]=val;else if(key==="l"&&typeof val==="string"&&val.length<60)event[key]=val;}
     if(target==="OnCrash"){const f=payload.f??m.f;if(typeof f==="number"&&Number.isFinite(f))event.f=f;else if(typeof args[0]==="number"&&Number.isFinite(args[0]))event.f=args[0];}
