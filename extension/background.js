@@ -25,6 +25,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
   }
  }
  if(Number.isInteger(event.argCount))record.argCount=event.argCount;
+ if(Array.isArray(event.numericPaths))record.numericPaths=event.numericPaths.slice(0,160).filter(x=>x&&typeof x.path==="string"&&x.path.length<=180&&typeof x.value==="number"&&Number.isFinite(x.value));
  if(Array.isArray(event.shape))record.shape=event.shape.slice(0,120).filter(x=>typeof x==="string"&&x.length<=160&&/^[a-zA-Z0-9_$.[\]:_-]+$/.test(x));
  chrome.storage.local.get({[KEY]:[]},data=>{
   const arr=data[KEY];arr.push(record);
