@@ -48,6 +48,7 @@ function readEvents(events){
  if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
 }
 function calculate(){
+ if(nextRound!==null && String(lastPredictedRound)===String(nextRound)){$("status").textContent="تم حساب توقع هذه الجولة بالفعل. انتظر ظهور رقم جولة جديد.";$("predict").disabled=true;return false;}
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
  if(crashes.length<10){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 10 نتائج مكتملة على الأقل.";return false;}
  // Choose the quantile that performed best in a walk-forward test on this
@@ -87,6 +88,7 @@ function calculate(){
  const highCount=sample.filter(n=>n>=5).length;
  const testCount=Math.max(0,sample.length-10);
  lastForecast=estimate;
+ lastPredictedRound=String(nextRound);
  $("forecast").textContent=estimate.toFixed(2)+"x";
  $("meta").textContent="اختيرت الشريحة "+Math.round(best.q*100)+"% باختبار تاريخي، مع وزن أكبر للجولات الأحدث حتى يستجيب التقدير لتغير النتائج. آخر "+sample.length+" جولة؛ منها "+highCount+" نتائج 5x فأكثر. قد يتكرر الرقم إذا دعمت البيانات نفس التقدير، ولا يضمن الاختبار الجولة التالية.";
  return true;
@@ -100,6 +102,7 @@ window.addEventListener("message",e=>{
   const lastRoundStart=[...allEvents].reverse().find(ev=>ev&&(["OnStage","OnBetting","OnStart"].indexOf(ev.target)>=0));
   roundFinished=!!lastCrash&&(!lastRoundStart||Number(lastCrash.receivedAt)>Number(lastRoundStart.receivedAt));
   $("predict").hidden=false;
+  if(!requestPending && nextRound!==null && String(lastPredictedRound)!==String(nextRound))$("predict").disabled=false;
   if(requestPending){
    requestPending=false;clearTimeout(requestTimer);
    $("predict").disabled=false;
@@ -114,6 +117,7 @@ window.addEventListener("message",e=>{
 });
 $("predict").addEventListener("click",()=>{
  if(requestPending)return;
+ if(nextRound!==null && String(lastPredictedRound)===String(nextRound)){$("status").textContent="تم حساب توقع لهذه الجولة بالفعل. انتظر رقم الجولة الجديدة.";$("predict").disabled=true;return;}
  $("predict").disabled=true;$("status").textContent="جارٍ جلب النتائج بطلبك...";
  requestPending=true;askForEvents();
  requestTimer=window.setTimeout(()=>{
