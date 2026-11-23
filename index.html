@@ -50,50 +50,52 @@ function readEvents(events){
 function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
  if(crashes.length<10){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 10 نتائج مكتملة على الأقل.";return false;}
- // Compare several recent-history windows using walk-forward tests.
- // Each historical prediction uses only outcomes that existed before that round.
+ // Alternative model: regime-transition matching (Markov-style).
+ // It looks for earlier occasions where the same low/medium/high pattern
+ // appeared, then studies the outcomes that followed those patterns.
  const sample=crashes.slice(-30);
- const candidates=[0.25,0.35,0.45,0.50,0.55,0.65,0.75];
- const windows=[5,8,12,16];
- const quantile=(values,q)=>{
-  const sorted=values.map((value,index)=>({value,weight:index+1})).sort((a,b)=>a.value-b.value);
-  const total=sorted.reduce((sum,item)=>sum+item.weight,0);
-  const target=q*total;
-  let accumulated=0;
-  for(const item of sorted){accumulated+=item.weight;if(accumulated>=target)return item.value;}
-  return sorted[sorted.length-1].value;
+ const regime=n=>n<2?"L":n<5?"M":"H";
+ const median=values=>{
+  if(!values.length)return 1;
+  const a=values.slice().sort((x,y)=>x-y),m=Math.floor(a.length/2);
+  return a.length%2?a[m]:(a[m-1]+a[m])/2;
  };
- const scores=[];
- for(const windowSize of windows){
-  for(const q of candidates){
-   const errors=[];
-   for(let i=windowSize;i<sample.length;i++){
-    const history=sample.slice(i-windowSize,i);
-    const predicted=quantile(history,q);
-    errors.push(Math.abs(Math.log(predicted/sample[i])));
-   }
-   // Require a useful number of out-of-sample checks before accepting a model.
-   if(errors.length<6)continue;
-   errors.sort((a,b)=>a-b);
-   const mid=Math.floor(errors.length/2);
-   const score=errors.length%2?errors[mid]:(errors[mid-1]+errors[mid])/2;
-   scores.push({q,windowSize,score,tests:errors.length});
+ const predictAt=(history,contextLength)=>{
+  const base=median(history.slice(-10));
+  const context=history.slice(-contextLength).map(regime).join("");
+  const matches=[];
+  for(let j=contextLength;j<history.length;j++){
+   const prior=history.slice(j-contextLength,j).map(regime).join("");
+   if(prior===context)matches.push(history[j]);
   }
- }
- if(!scores.length){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="لا توجد اختبارات تاريخية كافية لاختيار معادلة مستقرة.";return false;}
- scores.sort((a,b)=>a.score-b.score||b.tests-a.tests||Math.abs(a.q-0.5)-Math.abs(b.q-0.5));
- const best=scores[0];
- const active=sample.slice(-best.windowSize);
- const estimate=quantile(active,best.q);
- const classify=n=>n<2?"L":n<5?"M":"H";
+  if(matches.length<2)return {value:base,matches:matches.length,base,matched:null};
+  const matched=median(matches);
+  const confidence=matches.length/(matches.length+4);
+  const value=Math.exp(Math.log(base)*(1-confidence)+Math.log(matched)*confidence);
+  return {value,matches:matches.length,base,matched};
+ };
+ const models=[1,2,3].map(contextLength=>{
+  const errors=[];
+  for(let i=10;i<sample.length;i++){
+   const result=predictAt(sample.slice(0,i),contextLength);
+   errors.push(Math.abs(Math.log(result.value/sample[i])));
+  }
+  errors.sort((x,y)=>x-y);
+  const mid=Math.floor(errors.length/2);
+  const score=errors.length%2?errors[mid]:(errors[mid-1]+errors[mid])/2;
+  return {contextLength,score,tests:errors.length};
+ }).filter(m=>m.tests>=6);
+ if(!models.length){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="لا توجد اختبارات تاريخية كافية لتقييم النموذج البديل.";return false;}
+ models.sort((a,b)=>a.score-b.score||a.contextLength-b.contextLength);
+ const best=models[0];
+ const result=predictAt(sample,best.contextLength);
+ const lastPattern=sample.slice(-best.contextLength).map(regime).join(" → ");
  const recent=sample.slice(-8);
  const counts={L:0,M:0,H:0};
- recent.forEach(n=>counts[classify(n)]++);
- const wave=counts.H>=4?"موجة مرتفعة":counts.L>=5?"موجة منخفضة":counts.M>=4?"موجة متوسطة":"موجة مختلطة";
- const highCount=sample.filter(n=>n>=5).length;
- const lowCount=sample.filter(n=>n<2).length;
- $("forecast").textContent=estimate.toFixed(2)+"x";
- $("meta").textContent="النموذج المختار: آخر "+best.windowSize+" جولات، الشريحة "+Math.round(best.q*100)+"%. اختبار تاريخي: "+best.tests+" محاولة. آخر 8 جولات: "+counts.L+" منخفضة / "+counts.M+" متوسطة / "+counts.H+" مرتفعة ("+wave+"). إجمالي آخر 30: "+lowCount+" أقل من 2x و"+highCount+" من 5x فأكثر. هذا وصف إحصائي للماضي وليس دليلًا على أن الموجة ستستمر.";
+ recent.forEach(n=>counts[regime(n)]++);
+ const wave=counts.H>=4?"مرتفعة":counts.L>=5?"منخفضة":counts.M>=4?"متوسطة":"مختلطة";
+ $("forecast").textContent=result.value.toFixed(2)+"x";
+ $("meta").textContent="المعادلة البديلة: مطابقة نمط "+lastPattern+"؛ وجدت "+result.matches+" حالة مشابهة في السجل. "+(result.matched===null?"لم تتوفر حالات كافية، فاستخدمت وسيط آخر 10 نتائج.":"وسيط نتائج الحالات المشابهة "+result.matched.toFixed(2)+"x، مع دمجه تدريجيًا مع وسيط آخر 10 نتائج.")+" اختبار تاريخي: "+best.tests+" جولة. الموجة الأخيرة: "+wave+". هذا نموذج تجريبي لا يكشف نتيجة الجولة ولا يضمن استمرار النمط.";
  return true;
 }
 window.addEventListener("message",e=>{
