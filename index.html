@@ -43,7 +43,7 @@ button:disabled{opacity:.55;cursor:wait}
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, activeRequestId=null;
+let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, activeRequestId=null, lastCrashAt=null, crashEventCount=0;
 function askForEvents(){activeRequestId=String(Date.now())+"-"+Math.random().toString(36).slice(2);window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:activeRequestId},"*");}
 const accountInput=$("accountIdInput"), accountStatus=$("accountStatus");
 try{accountInput.value=localStorage.getItem("crashFlightAccountId")||"";}catch(_){}
@@ -58,7 +58,7 @@ $("saveAccount").addEventListener("click",()=>{
 });
 function readEvents(events){
  if(!Array.isArray(events))return;
- crashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000).slice(-200);
+ const crashEvents=events.filter(e=>e&&e.target==="OnCrash");\n crashEventCount=crashEvents.length;\n const validCrashes=crashEvents.filter(e=>Number.isFinite(Number(e.f))&&Number(e.f)>=1&&Number(e.f)<=100000);\n crashes=validCrashes.map(e=>Number(e.f)).slice(-200);\n lastCrashAt=validCrashes.length?validCrashes[validCrashes.length-1].receivedAt:null;
  const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
  const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
  nextRound=betting?.roundId??stage?.roundId??null;
@@ -101,7 +101,7 @@ window.addEventListener("message",e=>{
    $("predict").disabled=false;
    try{
     const ok=calculate();
-    $("status").textContent=ok?"تم حساب رقم واحد بناءً على السجل الحالي.":"لم يكتمل الحساب؛ راجع سبب نقص البيانات.";
+    const stamp=lastCrashAt?new Date(lastCrashAt).toLocaleTimeString("ar-EG"):"لا توجد نتيجة انفجار صالحة";\n    $("status").textContent=ok?"تم تحديث السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار. آخر نتيجة: "+stamp:"السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار؛ "+(lastCrashAt?"آخر نتيجة "+stamp:"لم تُلتقط قيمة انفجار صالحة")+". راجع اتصال الإضافة.";
    }catch(err){
     $("forecast").textContent="تعذر الحساب";
     $("meta").textContent="حدث خطأ أثناء التحليل؛ لم يتم تغيير سجل النتائج.";
