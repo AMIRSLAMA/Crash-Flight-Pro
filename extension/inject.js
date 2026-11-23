@@ -1,6 +1,6 @@
 (()=>{const CAPTURE_VERSION="0.3.2";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
  const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
- const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed|account|user|player|profile)/i;
+ const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
  const METRIC_KEY=/(multiplier|(^|[_-])mult([_-]|$)|coef|coefficient|factor|crash|elapsed|duration|time|stage|level|rate|speed|progress|round|tick|state|result|^f$|^x$)/i;
  function extractMetrics(value,out,depth=0){
   if(depth>6||value==null)return;
@@ -11,18 +11,6 @@
     out[key]=val;
    }else if(val&&typeof val==="object")extractMetrics(val,out,depth+1);
   }
- }
- function findAccountId(value,depth=0){
-  if(depth>6||value==null)return null;
-  if(Array.isArray(value)){for(const item of value.slice(0,40)){const found=findAccountId(item,depth+1);if(found!==null)return found;}return null;}
-  if(typeof value!=="object")return null;
-  for(const [key,val] of Object.entries(value).slice(0,80)){
-   if(/^(account_?id|user_?id|player_?id|profile_?id|member_?id|uid)$/i.test(key)){
-    if((typeof val==="string"&&val.trim().length>0&&val.trim().length<=64)||(typeof val==="number"&&Number.isSafeInteger(val)))return String(val).trim();
-   }
-  }
-  for(const val of Object.values(value).slice(0,80)){if(val&&typeof val==="object"){const found=findAccountId(val,depth+1);if(found!==null)return found;}}
-  return null;
  }
  function describeShape(value,out,path="$",depth=0){
   if(depth>5||out.length>=120||value==null)return;
@@ -43,12 +31,10 @@
     if(!m||typeof m!=="object"||m.type!==1||typeof m.target!=="string")continue;
     const target=m.target;
     const args=Array.isArray(m.arguments)?m.arguments:[];
-    const accountId=findAccountId(args)??findAccountId(m);
-    if(!TARGETS.has(target)&&!RELEVANT.test(target)&&accountId===null)continue;
+    if(!TARGETS.has(target)&&!RELEVANT.test(target))continue;
     const metrics={};extractMetrics(args,metrics);extractMetrics(m,metrics);
     const shape=[];describeShape(args,shape);
     const event={target,argCount:args.length,metrics,shape,captureVersion:CAPTURE_VERSION};
-    if(accountId!==null)event.accountId=accountId;
     const payload=args.find(a=>a&&typeof a==="object")||{};
     if(target==="OnProfits"&&Array.isArray(payload.q)){
      payload.q.slice(0,20).forEach((point,index)=>{
