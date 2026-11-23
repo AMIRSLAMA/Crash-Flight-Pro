@@ -8,6 +8,11 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  }
  if(message?.type!=="crash-flight-event"||!sender.tab?.id)return;
  const event=message.event;
+ if(event?.kind==="transport"&&event.target==="__transport__"){
+  const record={target:"__transport__",kind:"transport",transportType:String(event.transportType||"unknown").slice(0,24),byteLength:Number.isFinite(event.byteLength)?Math.max(0,event.byteLength):0,receivedAt:Date.now()};
+  chrome.storage.local.get({[KEY]:[]},data=>{const arr=data[KEY];arr.push(record);if(arr.length>20000)arr.splice(0,arr.length-20000);chrome.storage.local.set({[KEY]:arr});});
+  return;
+ }
  if(!event||typeof event.target!=="string"||(!TARGETS.has(event.target)&&!RELEVANT.test(event.target)))return;
  const record={target:event.target.slice(0,80),receivedAt:Date.now(),roundId:typeof event.l==="number"||typeof event.l==="string"?String(event.l).slice(0,60):null};
  if(typeof event.ln==="number"&&Number.isFinite(event.ln))record.ln=event.ln;
