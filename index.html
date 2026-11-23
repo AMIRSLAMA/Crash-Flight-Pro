@@ -50,11 +50,13 @@ function readEvents(events){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
  if(crashes.length<3){$("forecast").textContent="—";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 3 نتائج على الأقل لإظهار تقدير تجريبي.";return false;}
  if(crashes.length<16){
-  const recent=crashes.slice(-Math.min(10,crashes.length)).slice().sort((a,b)=>a-b);
-  const mid=Math.floor(recent.length/2);
-  const estimate=recent.length%2?recent[mid]:(recent[mid-1]+recent[mid])/2;
+  const recent=crashes.slice(-Math.min(12,crashes.length));
+  const ranked=recent.map((value,i)=>({value,weight:Math.pow(1.22,i)})).sort((a,b)=>a.value-b.value);
+  const total=ranked.reduce((sum,item)=>sum+item.weight,0);
+  let cumulative=0, estimate=ranked[ranked.length-1].value;
+  for(const item of ranked){cumulative+=item.weight;if(cumulative>=total/2){estimate=item.value;break;}}
   $("forecast").textContent=estimate.toFixed(2)+"x";
-  $("meta").textContent="تقدير تجريبي مبني على وسيط آخر "+recent.length+" نتائج فقط. البيانات قليلة؛ ليس توقعًا موثوقًا ولا معرفة مسبقة بنتيجة الجولة.";
+  $("meta").textContent="استراتيجية تجريبية: وسيط مرجّح يميل لآخر 12 نتيجة بدل المتوسط العادي. العينة الحالية "+recent.length+" فقط؛ نختبرها ولا نعتبرها معرفة مسبقة بنتيجة الجولة.";
   return true;
  }
  // Model tournament: compare rolling weighted-quantile models and
