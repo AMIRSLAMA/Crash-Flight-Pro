@@ -113,7 +113,7 @@ window.addEventListener("message",e=>{
  }
 });
 $("predict").addEventListener("click",()=>{
- if(requestPending||!roundFinished)return;
+ if(requestPending)return;
  $("predict").disabled=true;$("status").textContent="جارٍ جلب النتائج بطلبك...";
  requestPending=true;askForEvents();
  requestTimer=window.setTimeout(()=>{
