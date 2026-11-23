@@ -46,7 +46,7 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 <div class="bottom">
 <div class="info"><label>رقم الجولة</label><strong id="roundNumber">—</strong></div>
 <div class="info"><label>حالة الاتصال</label><strong class="green" id="connection">جاهز</strong></div>
-<button id="start">بدء تسجيل جولة</button>
+<button id="start">تحديث الاتصال</button>
 </div>
 <div class="tools">
 <label for="result">النتيجة بعد الانتهاء</label><input id="result" type="number" min="1" step=".01" placeholder="مثال 2.35">
@@ -100,7 +100,7 @@ window.addEventListener("message",e=>{
   }else{$("connection").textContent="في انتظار أحداث اللعبة";$("connection").className="";}
  }
 });
-$("start").addEventListener("click",()=>{setSignal("التسجيل اليدوي غير مطلوب","اللوحة تنتظر أحداث اللعبة من الإضافة. افتح اللعبة مع تفعيل الالتقاط ثم أعد تحميل صفحة اللوحة.");requestEvents();});
+$("start").addEventListener("click",()=>{setSignal("فحص الاتصال","جاري طلب أحدث أحداث اللعبة من الإضافة.");requestEvents();});
 $("save").addEventListener("click",()=>{setSignal("التسجيل تلقائي","تُعرض نتيجة الجولة عند وصول حدث OnCrash من اللعبة. لا تدخل رقمًا يدويًا هنا.");});
 $("historyToggle").addEventListener("click",()=>{const h=$("history");h.hidden=!h.hidden;});
 $("export").addEventListener("click",()=>{if(!results.length){setSignal("لا توجد نتائج مرصودة","سيظهر السجل بعد التقاط جولات فعلية.");return;}const blob=new Blob(["multiplier\n"+results.map(n=>n.toFixed(2)).join("\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sky-predictor-results.csv";a.click();URL.revokeObjectURL(a.href);});
