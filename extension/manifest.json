@@ -24,6 +24,30 @@
   "content_scripts": [
     {
       "matches": [
+        "https://*.1xbet.com/*",
+        "https://*.eg1xbet.com/*"
+      ],
+      "js": [
+        "inject.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://*.1xbet.com/*",
+        "https://*.eg1xbet.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "ISOLATED"
+    },
+    {
+      "matches": [
         "https://amirslama.github.io/Crash-Flight-Pro/*"
       ],
       "js": [
