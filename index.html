@@ -39,7 +39,7 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 <aside class="signal">
 <div class="alert-icon">⚠</div><h2 id="signalTitle">لا توجد إشارة مبكرة</h2>
 <p id="signalText">مراقبة الجولة<br>بانتظار بيانات حقيقية</p>
-<div class="sub">لن يظهر تحذير تنبؤي بدون دليل من مصدر الجولة</div>
+<div class="sub">حركة الطائرة توضح زمن الجولة فقط عند غياب قراءة المضاعف الحي؛ وليست توقعًا</div>
 </aside>
 </div>
 <div class="bottom">
@@ -52,23 +52,35 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 <button class="secondary" id="historyToggle">السجل</button>
 </div>
 <div class="history" id="history" hidden></div>
-<div class="foot">حركة الطائرة مرتبطة بقراءات المضاعف الحي إذا أرسلتها اللعبة · لا يوجد تنبؤ غير مثبت</div>
+<div class="foot">الطائرة تتحرك مع زمن الجولة وتتبع المضاعف إذا توفر من اللعبة · لا يوجد تنبؤ غير مثبت</div>
 </section>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let active=false,results=[],lastEventAt=0,currentMultiplier=1;
+let active=false,results=[],lastEventAt=0,currentMultiplier=null,flightStartedAt=0,flightTimer=null;
 const seen=new Set();
 function setSignal(title,html){$("signalTitle").textContent=title;$("signalText").innerHTML=html;}
-function drawFlight(on){$("flight").classList.toggle("active",on);if(!on)return;updatePlane(currentMultiplier);}
+function drawFlight(on){
+ $("flight").classList.toggle("active",on);
+ if(!on){if(flightTimer){clearInterval(flightTimer);flightTimer=null;}return;}
+ flightStartedAt=Date.now();
+ if(flightTimer)clearInterval(flightTimer);
+ flightTimer=setInterval(()=>{
+  if(!active)return;
+  const elapsed=(Date.now()-flightStartedAt)/1000;
+  updatePlaneProgress(Math.min(.94,elapsed/30));
+ },120);
+ updatePlaneProgress(0);
+}
+function updatePlaneProgress(progress){
+ const p=Math.max(0,Math.min(1,progress));
+ $("plane").style.left=(5+p*82)+"%";
+ $("plane").style.top=(76-p*59)+"%";
+ $("plane").style.transform="translate(-50%,-50%) rotate(-18deg)";
+}
 function updatePlane(multiplier){
  const n=Math.max(1,Math.min(100000,Number(multiplier)||1));
- const progress=Math.max(0,Math.min(1,Math.log(n)/Math.log(30)));
- const x=5+progress*82;
- const y=76-progress*59;
- $("plane").style.left=x+"%";
- $("plane").style.top=y+"%";
- $("plane").style.transform="translate(-50%,-50%) rotate(-18deg)";
+ updatePlaneProgress(Math.max(0,Math.min(1,Math.log(n)/Math.log(30))));
 }
 function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}
 function liveMultiplier(e){
@@ -86,9 +98,9 @@ function handleEvents(events){
   const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
   if(seen.has(key))continue;seen.add(key);lastEventAt=Math.max(lastEventAt,Number(e.receivedAt)||0);
   if(e.target==="OnStart"){
-   active=true;currentMultiplier=1;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"—";
+   active=true;currentMultiplier=null;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"—";
    $("connection").textContent="بداية الجولة مرصودة";$("connection").className="green";
-   $("multiplierDisplay").innerHTML="1.00<small>x</small>";drawFlight(true);
+   $("multiplierDisplay").innerHTML="—<small>x</small>";drawFlight(true);
    setSignal("الجولة بدأت","تم التقاط بداية الجولة من اللعبة مباشرة");
   }else if(e.target==="OnCrash"){
    active=false;drawFlight(false);
