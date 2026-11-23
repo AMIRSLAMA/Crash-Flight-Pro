@@ -96,9 +96,9 @@ window.addEventListener("message",e=>{
  if(e.data.type==="events"){
   readEvents(e.data.events||[]);
   const allEvents=e.data.events||[];
-  const crashIndex=allEvents.map(ev=>ev&&ev.target==="OnCrash").lastIndexOf(true);
-  const startIndex=allEvents.map(ev=>ev&&(["OnStage","OnBetting","OnStart"].indexOf(ev.target)>=0)).lastIndexOf(true);
-  roundFinished=crashIndex>=0&&crashIndex>startIndex;
+  const lastCrash=[...allEvents].reverse().find(ev=>ev&&ev.target==="OnCrash");
+  const lastRoundStart=[...allEvents].reverse().find(ev=>ev&&(["OnStage","OnBetting","OnStart"].indexOf(ev.target)>=0));
+  roundFinished=!!lastCrash&&(!lastRoundStart||Number(lastCrash.receivedAt)>Number(lastRoundStart.receivedAt));
   $("predict").hidden=!roundFinished;
   if(requestPending){
    requestPending=false;clearTimeout(requestTimer);
