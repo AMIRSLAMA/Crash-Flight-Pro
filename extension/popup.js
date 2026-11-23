@@ -4,7 +4,7 @@ document.getElementById("start").onclick=async()=>{
   const [tab]=await chrome.tabs.query({active:true,currentWindow:true});
   if(!tab?.id||!/^https:\/\//.test(tab.url||""))throw Error("افتح صفحة اللعبة HTTPS أولًا");
   const host=new URL(tab.url).hostname;
-  if(!/(^|\.)(1xbet\.com|eg1xbet\.com)$/.test(host))throw Error("التسجيل متاح فقط على صفحة اللعبة");
+  if(!/(^|\.)(1xbet\.com|eg1xbet\.com|1xlite-11151\.pro)$/.test(host))throw Error("التسجيل متاح فقط على صفحة اللعبة");
   await chrome.scripting.executeScript({target:{tabId:tab.id,allFrames:true},files:["inject.js"],world:"MAIN"});
   await chrome.scripting.executeScript({target:{tabId:tab.id,allFrames:true},files:["content.js"],world:"ISOLATED"});
   status.textContent="تم تفعيل التسجيل. الإضافة تراقب اتصال اللعبة تلقائيًا من بداية تحميل الصفحة؛ أعد تحميل صفحة اللعبة بعد تثبيت التحديث.";
