@@ -50,12 +50,12 @@ function readEvents(events){
 function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
  if(crashes.length<10){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 10 نتائج مكتملة على الأقل.";return false;}
- // Choose the quantile that performed best in a walk-forward test on this
- // session's own history. Every test predicts a past round using only earlier rounds.
+ // Compare several recent-history windows using walk-forward tests.
+ // Each historical prediction uses only outcomes that existed before that round.
  const sample=crashes.slice(-30);
  const candidates=[0.25,0.35,0.45,0.50,0.55,0.65,0.75];
+ const windows=[5,8,12,16];
  const quantile=(values,q)=>{
-  // Give newer rounds more influence than older ones.
   const sorted=values.map((value,index)=>({value,weight:index+1})).sort((a,b)=>a.value-b.value);
   const total=sorted.reduce((sum,item)=>sum+item.weight,0);
   const target=q*total;
@@ -63,24 +63,37 @@ function calculate(){
   for(const item of sorted){accumulated+=item.weight;if(accumulated>=target)return item.value;}
   return sorted[sorted.length-1].value;
  };
- const scores=candidates.map(q=>{
-  const errors=[];
-  for(let i=10;i<sample.length;i++){
-   const predicted=quantile(sample.slice(Math.max(0,i-10),i),q);
-   errors.push(Math.abs(Math.log(predicted/sample[i])));
+ const scores=[];
+ for(const windowSize of windows){
+  for(const q of candidates){
+   const errors=[];
+   for(let i=windowSize;i<sample.length;i++){
+    const history=sample.slice(i-windowSize,i);
+    const predicted=quantile(history,q);
+    errors.push(Math.abs(Math.log(predicted/sample[i])));
+   }
+   // Require a useful number of out-of-sample checks before accepting a model.
+   if(errors.length<6)continue;
+   errors.sort((a,b)=>a-b);
+   const mid=Math.floor(errors.length/2);
+   const score=errors.length%2?errors[mid]:(errors[mid-1]+errors[mid])/2;
+   scores.push({q,windowSize,score,tests:errors.length});
   }
-  errors.sort((a,b)=>a-b);
-  const mid=Math.floor(errors.length/2);
-  const score=errors.length?(errors.length%2?errors[mid]:(errors[mid-1]+errors[mid])/2):Infinity;
-  return {q,score};
- });
- scores.sort((a,b)=>a.score-b.score||Math.abs(a.q-0.5)-Math.abs(b.q-0.5));
+ }
+ if(!scores.length){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="لا توجد اختبارات تاريخية كافية لاختيار معادلة مستقرة.";return false;}
+ scores.sort((a,b)=>a.score-b.score||b.tests-a.tests||Math.abs(a.q-0.5)-Math.abs(b.q-0.5));
  const best=scores[0];
- const estimate=quantile(sample,best.q);
+ const active=sample.slice(-best.windowSize);
+ const estimate=quantile(active,best.q);
+ const classify=n=>n<2?"L":n<5?"M":"H";
+ const recent=sample.slice(-8);
+ const counts={L:0,M:0,H:0};
+ recent.forEach(n=>counts[classify(n)]++);
+ const wave=counts.H>=4?"موجة مرتفعة":counts.L>=5?"موجة منخفضة":counts.M>=4?"موجة متوسطة":"موجة مختلطة";
  const highCount=sample.filter(n=>n>=5).length;
- const testCount=Math.max(0,sample.length-10);
+ const lowCount=sample.filter(n=>n<2).length;
  $("forecast").textContent=estimate.toFixed(2)+"x";
- $("meta").textContent="اختيرت الشريحة "+Math.round(best.q*100)+"% باختبار تاريخي، مع وزن أكبر للجولات الأحدث حتى يستجيب التقدير لتغير النتائج. آخر "+sample.length+" جولة؛ منها "+highCount+" نتائج 5x فأكثر. قد يتكرر الرقم إذا دعمت البيانات نفس التقدير، ولا يضمن الاختبار الجولة التالية.";
+ $("meta").textContent="النموذج المختار: آخر "+best.windowSize+" جولات، الشريحة "+Math.round(best.q*100)+"%. اختبار تاريخي: "+best.tests+" محاولة. آخر 8 جولات: "+counts.L+" منخفضة / "+counts.M+" متوسطة / "+counts.H+" مرتفعة ("+wave+"). إجمالي آخر 30: "+lowCount+" أقل من 2x و"+highCount+" من 5x فأكثر. هذا وصف إحصائي للماضي وليس دليلًا على أن الموجة ستستمر.";
  return true;
 }
 window.addEventListener("message",e=>{
