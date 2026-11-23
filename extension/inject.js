@@ -35,6 +35,15 @@
     const shape=[];describeShape(args,shape);
     const event={target,argCount:args.length,metrics,shape,captureVersion:CAPTURE_VERSION};
     const payload=args.find(a=>a&&typeof a==="object")||{};
+    if(target==="OnProfits"&&Array.isArray(payload.q)){
+     payload.q.slice(0,20).forEach((point,index)=>{
+      if(!point||typeof point!=="object")return;
+      for(const axis of ["u","v"]){
+       const value=point[axis];
+       if(typeof value==="number"&&Number.isFinite(value))metrics["profitPoint"+index+axis.toUpperCase()]=value;
+      }
+     });
+    }
     for(const key of ["l","ln","ts"]){const val=payload[key]??m[key];if(typeof val==="number"&&Number.isFinite(val))event[key]=val;else if(key==="l"&&typeof val==="string"&&val.length<60)event[key]=val;}
     if(target==="OnCrash"){const f=payload.f??m.f;if(typeof f==="number"&&Number.isFinite(f))event.f=f;else if(typeof args[0]==="number"&&Number.isFinite(args[0]))event.f=args[0];}
     window.postMessage({source:"crash-flight-pro-capture",event},"*");
