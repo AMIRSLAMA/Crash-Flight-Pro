@@ -37,7 +37,7 @@ button:disabled{opacity:.55;cursor:wait}
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, lastForecast=null;
+let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false;
 function askForEvents(){window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:String(Date.now())},"*");}
 function readEvents(events){
  if(!Array.isArray(events))return;
@@ -75,18 +75,10 @@ function calculate(){
   return {q,score};
  });
  scores.sort((a,b)=>a.score-b.score||Math.abs(a.q-0.5)-Math.abs(b.q-0.5));
- // First experimental tweak: avoid repeating the previous displayed value if another
- // tested percentile produces a different estimate; choose the next best score.
- let best=scores[0], estimate=quantile(sample,best.q);
- if(lastForecast!==null && estimate===lastForecast){
-  for(const candidate of scores.slice(1)){
-   const alternate=quantile(sample,candidate.q);
-   if(alternate!==lastForecast){best=candidate;estimate=alternate;break;}
-  }
- }
+ const best=scores[0];
+ const estimate=quantile(sample,best.q);
  const highCount=sample.filter(n=>n>=5).length;
  const testCount=Math.max(0,sample.length-10);
- lastForecast=estimate;
  $("forecast").textContent=estimate.toFixed(2)+"x";
  $("meta").textContent="اختيرت الشريحة "+Math.round(best.q*100)+"% باختبار تاريخي، مع وزن أكبر للجولات الأحدث حتى يستجيب التقدير لتغير النتائج. آخر "+sample.length+" جولة؛ منها "+highCount+" نتائج 5x فأكثر. قد يتكرر الرقم إذا دعمت البيانات نفس التقدير، ولا يضمن الاختبار الجولة التالية.";
  return true;
