@@ -2,174 +2,74 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#070b15"><title>Sky Predictor</title>
+<meta name="theme-color" content="#080d16"><title>Crash Flight</title>
 <style>
-:root{color-scheme:dark;font-family:Tahoma,"Segoe UI",sans-serif;background:#070b15;color:#f4f7ff}*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;place-items:center;padding:14px;background:radial-gradient(ellipse at 25% 0,#172a45 0,#070b15 65%)}
-.app{width:min(760px,100%);min-height:420px;border:1px solid #344052;border-radius:22px;overflow:hidden;background:#080e1b;box-shadow:0 22px 70px #0009}
-header{height:66px;display:flex;align-items:center;gap:13px;padding:0 20px;border-bottom:1px solid #263247;background:#090d16}
-.logo{font-size:29px;color:#f5f8ff}.name{font-size:22px;font-weight:900;letter-spacing:.2px}.name span{color:#f7b83c}.spacer{flex:1}.window{display:flex;gap:16px;color:#9ba9bb;font-size:20px}
-.main{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(210px,.8fr);gap:14px;padding:16px}
-.flight{position:relative;min-height:260px;border:1px solid #26364e;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 55% 100%,#183451,#08101f 68%)}
-.skyline{position:absolute;inset:0;width:100%;height:100%}.cloud{fill:#1d2d48;opacity:.65}.grid{stroke:#263b55;stroke-dasharray:4 8;stroke-width:1}.flight-path{fill:none;stroke:#ffb72e;stroke-width:4;stroke-linecap:round;filter:drop-shadow(0 0 7px #ff9e20)}
-.plane{position:absolute;left:48%;top:32%;font-size:46px;transform:rotate(-18deg);filter:drop-shadow(0 0 10px #f4b53c);transition:left .5s,top .5s}
-.plane{will-change:left,top}
-.multiplier{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:clamp(48px,9vw,76px);font-weight:900;direction:ltr;text-shadow:0 4px 18px #000}.multiplier small{font-size:.45em;color:#18e66b}
-.signal{border:2px solid #e83d42;border-radius:16px;background:linear-gradient(160deg,#210c13,#100b13);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;min-height:260px}
-.alert-icon{font-size:49px;color:#ff4148;line-height:1}.signal h2{font-size:25px;margin:12px 0 5px}.signal p{margin:0;color:#f7c84b;font-size:16px;line-height:1.6;white-space:pre-line}.signal .sub{margin-top:12px;color:#aeb9c9;font-size:12px}
-.forecast{margin:0 16px 14px;padding:13px 15px;border:1px solid #34465f;border-radius:14px;background:linear-gradient(110deg,#14253a,#0d1726);display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.forecast label{display:block;color:#aab9cc;font-size:12px;margin-bottom:5px}.forecast strong{font-size:23px;color:#f6c45b;direction:ltr;display:inline-block}.forecast small{display:block;color:#9aabc0;font-size:11px;line-height:1.5;margin-top:5px}.forecast .round{font-size:13px;color:#dce7f5;text-align:left}.forecast .round b{display:block;font-size:18px;color:#fff;margin-top:4px}
-.bottom{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:12px;padding:0 16px 16px}
-.info{background:#111d2d;border:1px solid #293c54;border-radius:12px;padding:10px 12px;min-height:60px}.info label{display:block;color:#a7b5c8;font-size:11px;margin-bottom:5px}.info strong{font-size:15px}.green{color:#22e66b}
-button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(#13d64e,#079b37);color:white;box-shadow:0 5px 18px #00c94c33}button.secondary{background:#24364d;color:#eaf1fa;box-shadow:none;border:1px solid #3c526e}button:disabled{opacity:.45;cursor:not-allowed}
-.tools{padding:0 16px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.tools input{width:110px;background:#0b1524;border:1px solid #354a63;border-radius:9px;color:white;padding:10px;font-size:14px}.tools label{font-size:12px;color:#aebbd0}.history{padding:0 16px 14px;color:#93a5bb;font-size:11px;display:flex;gap:7px;flex-wrap:wrap}.history b{color:#65e5ae}.foot{text-align:center;color:#71839b;font-size:10px;padding:0 12px 12px}
-@media(max-width:570px){.main{grid-template-columns:1fr}.flight,.signal{min-height:190px}.bottom{grid-template-columns:1fr 1fr}.bottom button{grid-column:1/-1}.window{display:none}.name{font-size:19px}}
+:root{color-scheme:dark;font-family:Tahoma,"Segoe UI",sans-serif;background:#080d16;color:#f4f7ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at 50% 0,#1b3048,#080d16 68%)}
+.card{width:min(370px,100%);aspect-ratio:1/1;border:1px solid #35465d;border-radius:24px;background:linear-gradient(155deg,#14243a,#0b1321 65%);box-shadow:0 24px 70px #0009;padding:22px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center}
+.brand{font-size:15px;letter-spacing:2px;color:#9eb1c9;font-weight:700}.brand b{color:#f6bd4d}
+.label{font-size:14px;color:#aebbd0;margin-top:8px}.round{font-size:clamp(27px,8vw,38px);font-weight:900;direction:ltr;color:#fff;font-variant-numeric:tabular-nums}
+.divider{width:100%;height:1px;background:#2a3a50;margin:2px 0}
+.range{font-size:clamp(30px,8vw,40px);font-weight:900;color:#f6c45b;direction:ltr;white-space:nowrap;font-variant-numeric:tabular-nums}
+.meta{font-size:11px;color:#9eafc4;line-height:1.6;min-height:34px}
+button{width:100%;border:0;border-radius:14px;padding:16px 12px;font-size:16px;font-weight:900;color:#08120d;background:linear-gradient(#ffd16c,#e8a72d);cursor:pointer;box-shadow:0 8px 22px #e9a72d33}
+button:disabled{opacity:.55;cursor:wait}
+.status{font-size:11px;color:#94a7bf;min-height:16px}
+.note{font-size:10px;color:#788ba4;line-height:1.5}
 </style></head>
 <body>
-<section class="app">
-<header><div class="logo">✈</div><div class="name">Sky <span>Predictor</span></div><div class="spacer"></div><div class="window" aria-hidden="true">—　□　×</div></header>
-<div class="main">
-<div class="flight" id="flight">
-<svg class="skyline" viewBox="0 0 600 300" preserveAspectRatio="none" aria-hidden="true">
-<path class="grid" d="M0 70H600M0 140H600M0 210H600M100 0V300M220 0V300M340 0V300M460 0V300"/>
-<path class="cloud" d="M0 72Q20 43 49 65Q71 32 105 66Q132 56 148 83H0ZM405 120Q428 89 456 111Q479 78 513 110Q550 94 574 130H405Z"/>
-<path class="flight-path" d="M18 260 Q145 225 225 184 T410 105 T585 35"/>
-</svg>
-<div class="plane" id="plane">✈</div>
-<div class="multiplier" id="multiplierDisplay">—<small>x</small></div>
-</div>
-<aside class="signal">
-<div class="alert-icon">⚠</div><h2 id="signalTitle">لا توجد إشارة مبكرة</h2>
-<p id="signalText">رصد أحداث ما قبل الجولة<br>بدون توقع للنتيجة</p>
-<div class="sub">الرسائل قبل الجولة تُعرض كما وردت من اللعبة. لا توجد بيانات مثبتة لتوقع المضاعف القادم.</div>
-</aside>
-</div>
-<div class="forecast">
- <div><label>توقع تجريبي للجولة القادمة</label><strong id="forecastRange">عينة غير كافية</strong><small id="forecastMeta">بانتظار نتائج جولات مكتملة.</small></div>
- <div class="round">رقم الجولة القادمة<b id="nextRound">بانتظار رقم الجولة</b></div>
-</div>
-<div class="bottom">
-<div class="info"><label>معرّف الجولة المرصود</label><strong id="roundNumber">—</strong></div>
-<div class="info"><label>حالة الاتصال</label><strong class="green" id="connection">جاهز</strong></div>
-<button id="start">تحديث الاتصال</button>
-</div>
-<div class="tools">
-<button class="secondary" id="export">تصدير السجل</button>
-<button class="secondary" id="historyToggle">السجل</button>
-</div>
-<div class="history" id="history" hidden></div>
-<div class="foot">الطائرة تتحرك وفق المضاعف الحي إذا أرسلته اللعبة · لا توجد حركة زمنية تخمينية أو نتيجة متوقعة</div>
-</section>
+<main class="card">
+ <div class="brand">✈ CRASH <b>FLIGHT</b></div>
+ <section style="width:100%">
+  <div class="label">رقم الجولة القادمة</div>
+  <div class="round" id="nextRound">—</div>
+ </section>
+ <div class="divider"></div>
+ <section style="width:100%">
+  <div class="label">التوقع الإحصائي التجريبي</div>
+  <div class="range" id="forecast">—</div>
+  <div class="meta" id="meta">اضغط الزر بنفسك قبل بداية الجولة لحساب توقع جديد.</div>
+ </section>
+ <button id="predict">احسب توقع الجولة القادمة</button>
+ <div class="status" id="status">في انتظار طلبك</div>
+ <div class="note">التوقع تقدير تاريخي وليس معرفة مسبقة بنتيجة الجولة أو ضمانًا لها.</div>
+</main>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let active=false,results=[],lastEventAt=0,currentMultiplier=null,preRoundEvents=0,lastStageId=null,lastBettingRoundId=null,observedCrashes=[],nextRoundLabel=null;
-const seen=new Set();
-function setSignal(title,text){$("signalTitle").textContent=title;$("signalText").textContent=text;}
-function drawFlight(on){
- $("flight").classList.toggle("active",on);
- if(on)updatePlaneProgress(0);
-}
-function updatePlaneProgress(progress){
- const p=Math.max(0,Math.min(1,progress));
- $("plane").style.left=(5+p*82)+"%";
- $("plane").style.top=(76-p*59)+"%";
- $("plane").style.transform="translate(-50%,-50%) rotate(-18deg)";
-}
-function updatePlane(multiplier){
- const n=Math.max(1,Math.min(100000,Number(multiplier)||1));
- updatePlaneProgress(Math.max(0,Math.min(1,Math.log(n)/Math.log(30))));
-}
-function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}
-function metricSummary(e){const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};const entries=Object.entries(m).filter(([k,v])=>typeof v==="number"&&Number.isFinite(v)).slice(0,5);return entries.map(([k,v])=>k+": "+v).join(" · ");}
-function liveMultiplier(e){
- const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};
- for(const [key,value] of Object.entries(m)){
-  const normalized=key.replace(/[^a-z0-9]/gi,"").toLowerCase();
-  if(!/^(multiplier|currentmultiplier|multipliervalue|mult|coef|coefficient|factor|crashmultiplier|currentmult|currentx)$/.test(normalized))continue;
-  const n=Number(value);if(Number.isFinite(n)&&n>=1&&n<=100000)return n;
- }
- return null;
-}
-function updateNextRoundForecast(){
- const sample=observedCrashes.slice(-100).filter(n=>Number.isFinite(n)&&n>=1);
- const label=nextRoundLabel||(lastBettingRoundId!==null?String(lastBettingRoundId):"—");
- $("nextRound").textContent=label==="—"?"بانتظار رقم الجولة":"#"+label;
- if(sample.length<10){
-  $("forecastRange").textContent="عينة غير كافية";
-  $("forecastMeta").textContent="تم جمع "+sample.length+" من 10 جولات مطلوبة لعرض نطاق تجريبي.";
-  return;
- }
- const sorted=[...sample].sort((a,b)=>a-b);
- const q=p=>sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*p))];
- const low=q(.25),mid=q(.5),high=q(.75);
- $("forecastRange").textContent=low.toFixed(2)+"x – "+high.toFixed(2)+"x";
- $("forecastMeta").textContent="الوسيط التاريخي: "+mid.toFixed(2)+"x · عينة آخر "+sample.length+" جولة. هذا نطاق إحصائي تجريبي لا يكشف نتيجة الجولة القادمة ولا يضمنها.";
-}
-function estimateHistoricalRisk(current){
- const sample=observedCrashes.filter(n=>Number.isFinite(n)&&n>=1);
- if(sample.length<30)return {ready:false,count:sample.length};
- const survived=sample.filter(n=>n>current);
- const nextBand=survived.filter(n=>n<=current+0.5).length;
- return {ready:survived.length>=15,count:sample.length,atRisk:survived.length,percent:survived.length?Math.round(nextBand/survived.length*100):100};
-}
-function showRisk(current){
- const r=estimateHistoricalRisk(current);
- if(!r.ready){setSignal("مؤشر تجريبي غير متاح","المضاعف الحالي: "+current.toFixed(2)+"x\nنحتاج 30 نتيجة مرصودة على الأقل، و15 جولة تجاوزت هذا المضاعف.\nلا توجد إشارة موثوقة للانفجار القادم.");return;}
- setSignal("مؤشر مخاطرة تاريخي · تجريبي","المضاعف الحالي: "+current.toFixed(2)+"x\n"+r.percent+"% من الجولات التاريخية التي تجاوزت هذا المضاعف انتهت خلال الـ 0.5x التالية.\nالعينة: "+r.count+" جولة · الناجية حتى هذا المضاعف: "+r.atRisk+"\nهذا معدل تاريخي وليس توقعًا مؤكدًا للجولة الحالية.");
-}
-function handleEvents(events){
+let crashes=[], nextRound=null, requestPending=false;
+function askForEvents(){window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:String(Date.now())},"*");}
+function readEvents(events){
  if(!Array.isArray(events))return;
- observedCrashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000);
- updateNextRoundForecast();
- for(const e of events){
-  if(!e||!e.target)continue;
-  const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
-  if(seen.has(key))continue;seen.add(key);lastEventAt=Math.max(lastEventAt,Number(e.receivedAt)||0);
-  if(e.target==="OnStage"&&!active){preRoundEvents++;lastStageId=e.roundId??null;if(e.roundId){$("roundNumber").textContent="#"+e.roundId;nextRoundLabel=e.roundId;updateNextRoundForecast();}const detail=metricSummary(e);setSignal("رصد مرحلة قبل الجولة","معرّف المرحلة: "+(lastStageId??"غير متاح")+" · أحداث قبل البداية: "+preRoundEvents+(detail?"\n"+detail:""));$("connection").textContent="رصد مرحلة ما قبل الجولة";$("connection").className="green";}else if(e.target==="OnStart"){
-   active=true;currentMultiplier=null;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"—";preRoundEvents=0;
-   $("connection").textContent="بداية الجولة مرصودة";$("connection").className="green";
-   $("multiplierDisplay").innerHTML="—<small>x</small>";drawFlight(true);
-   setSignal("الجولة بدأت","تم التقاط بداية الجولة من اللعبة مباشرة");
-  }else if(e.target==="OnCrash"){
-   active=false;drawFlight(false);
-   const mult=Number(e.f);
-   if(Number.isFinite(mult)&&mult>=1){currentMultiplier=mult;$("multiplierDisplay").innerHTML=mult.toFixed(2)+'<small>x</small>';results.push(mult);$("history").hidden=false;$("history").textContent="آخر نتيجة مرصودة: "+mult.toFixed(2)+"x";updatePlane(mult);}
-   $("connection").textContent="وصل حدث نهاية الجولة";$("connection").className="";
-   setSignal("انتهت الجولة","النتيجة المسجلة: "+(Number.isFinite(mult)?mult.toFixed(2)+"x":"غير متاحة")+"\nتم حفظها ضمن العينة التاريخية. المؤشر التاريخي لا يضمن الجولة التالية.");
-  }else if(e.target==="OnBetting"&&!active){
-   preRoundEvents++;lastBettingRoundId=e.roundId??null;if(lastBettingRoundId!==null){$("roundNumber").textContent="#"+lastBettingRoundId;nextRoundLabel=lastBettingRoundId;updateNextRoundForecast();}
-   $("connection").textContent="استقبال أحداث ما قبل الجولة";setSignal("مرحلة الرهان","معرّف الجولة المرصود: "+(lastBettingRoundId??"غير متاح")+" · أحداث قبل البداية: "+preRoundEvents+(metricSummary(e)?"\n"+metricSummary(e):"")+"\nبيانات متابعة وليست تنبؤًا.");
-  }else{
-   const mult=liveMultiplier(e);
-   if(mult!==null&&active){
-    currentMultiplier=mult;updatePlane(mult);
-    $("multiplierDisplay").innerHTML=mult.toFixed(2)+'<small>x</small>';
-    $("connection").textContent="مضاعف حي مرصود";$("connection").className="green";
-    showRisk(mult);
-   }else if(active&&e.metrics&&Object.keys(e.metrics).length){
-    $("connection").textContent="بيانات الجولة تُسجّل";$("connection").className="green";
-   }
-  }
- }
+ crashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000).slice(-100);
+ const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
+ const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
+ nextRound=betting?.roundId??stage?.roundId??null;
+ if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
 }
-function requestEvents(){
- const requestId=String(Date.now())+Math.random().toString(16).slice(2);
- window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId},"*");
+function quantile(sorted,p){return sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*p))];}
+function calculate(){
+ if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return;}
+ if(crashes.length<10){$("forecast").textContent="عينة غير كافية";$("meta").textContent="تم رصد "+crashes.length+" من 10 نتائج مكتملة مطلوبة. لا نعرض رقمًا تخمينيًا من دون عينة.";return;}
+ const sample=crashes.slice(-20).sort((a,b)=>a-b);
+ const low=quantile(sample,.30), high=quantile(sample,.70), median=quantile(sample,.50);
+ $("forecast").textContent=low.toFixed(2)+"x – "+high.toFixed(2)+"x";
+ $("meta").textContent="آخر "+sample.length+" جولة · الوسيط "+median.toFixed(2)+"x. النطاق يتغير مع النتائج المسجلة ولا يضمن نتيجة الجولة التالية.";
 }
 window.addEventListener("message",e=>{
  if(e.source!==window||e.data?.source!=="crash-flight-extension")return;
- if(e.data.type==="unavailable"){$("connection").textContent="الإضافة غير متصلة";$("connection").className="";return;}
  if(e.data.type==="events"){
-  const list=e.data.events||[];
-  if(list.length){handleEvents(list);const age=Date.now()-lastEventAt;
-   if(age<12000){$("connection").textContent="متصل · "+list.length+" حدث";$("connection").className="green";}
-   else {$("connection").textContent="لا توجد أحداث حديثة";$("connection").className="";}
-  }else{$("connection").textContent="في انتظار أحداث اللعبة";$("connection").className="";}
+  readEvents(e.data.events||[]);
+  if(requestPending){requestPending=false;$("predict").disabled=false;$("status").textContent="تم تحديث البيانات؛ التوقع محسوب يدويًا.";}
+ }
+ if(e.data.type==="unavailable"){
+  requestPending=false;$("predict").disabled=false;$("status").textContent="الإضافة غير متصلة؛ افتح اللعبة وفعّل الإضافة.";
  }
 });
-$("start").addEventListener("click",()=>{setSignal("فحص الاتصال","جاري طلب أحدث أحداث اللعبة من الإضافة.");requestEvents();});
-$("historyToggle").addEventListener("click",()=>{const h=$("history");h.hidden=!h.hidden;});
-$("export").addEventListener("click",()=>{if(!results.length){setSignal("لا توجد نتائج مرصودة","سيظهر السجل بعد التقاط جولات فعلية.");return;}const blob=new Blob(["multiplier\n"+results.map(n=>n.toFixed(2)).join("\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sky-predictor-results.csv";a.click();URL.revokeObjectURL(a.href);});
-requestEvents();setInterval(requestEvents,1500);
+$("predict").addEventListener("click",()=>{
+ $("predict").disabled=true;$("status").textContent="جارٍ جلب آخر النتائج بطلبك...";
+ requestPending=true;askForEvents();
+ window.setTimeout(()=>{if(requestPending){requestPending=false;$("predict").disabled=false;$("status").textContent="لم يصل رد من الإضافة. تأكد أنها متصلة ثم حاول مجددًا.";}},2500);
+});
 </script>
 </body></html>
