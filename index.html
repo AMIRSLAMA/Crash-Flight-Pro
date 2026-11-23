@@ -60,7 +60,7 @@ window.addEventListener("message",e=>{
  if(e.source!==window||e.data?.source!=="crash-flight-extension")return;
  if(e.data.type==="events"){
   readEvents(e.data.events||[]);
-  if(requestPending){requestPending=false;$("predict").disabled=false;$("status").textContent="تم تحديث البيانات؛ التوقع محسوب يدويًا.";}
+  if(requestPending){requestPending=false;$("predict").disabled=false;calculate();$("status").textContent="تم تحديث البيانات؛ التوقع محسوب يدويًا.";}
  }
  if(e.data.type==="unavailable"){
   requestPending=false;$("predict").disabled=false;$("status").textContent="الإضافة غير متصلة؛ افتح اللعبة وفعّل الإضافة.";
