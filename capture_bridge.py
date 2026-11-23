@@ -11,36 +11,80 @@ from PySide6.QtCore import QUrl
 from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineScript
 
 PREFIX = "__CFP_EVENT__"
-TARGETS = {"OnStage", "OnBetting", "OnStart", "OnCrash", "OnBets", "OnProfits"}
+TARGETS = {"OnRegistration", "OnStage", "OnBetting", "OnStart", "OnCrash"}
 SCRIPT = r"""
 (() => {
   if (window.__cfpCaptureInstalled) return;
   Object.defineProperty(window, '__cfpCaptureInstalled', {value:true});
   const NativeSocket = window.WebSocket;
   if (!NativeSocket) return;
-  const allowed = new Set(['OnStage','OnBetting','OnStart','OnCrash','OnBets','OnProfits']);
+  // Event names and minimal fields verified against the Crash-Game-Source client.
+  const allowed = new Set(['OnRegistration','OnStage','OnBetting','OnStart','OnCrash']);
+  const stages = {planned:0,waiting:1,betting:2,started:3,ended:4,closed:5};
+  function finiteNumber(v) {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    return null;
+  }
   function inspect(raw) {
     if (typeof raw !== 'string') return;
     for (const part of raw.split('\u001e')) {
-      let message;
-      try { message = JSON.parse(part); } catch (_) { continue; }
-      if (!message || !allowed.has(message.target)) continue;
-      const a = Array.isArray(message.arguments) ? message.arguments[0] : null;
-      if (!a || typeof a !== 'object') continue;
-      const event = {target:message.target};
-      for (const key of ['l','ln','ts']) {
-        if (typeof a[key] === 'number' && Number.isFinite(a[key])) event[key] = a[key];
+      if (!part) continue;
+      let parsed;
+      try { parsed = JSON.parse(part); } catch (_) { continue; }
+      const frames = Array.isArray(parsed) ? parsed : [parsed];
+      for (const message of frames) {
+        if (!message || typeof message !== 'object' || !allowed.has(message.target)) continue;
+        const a = Array.isArray(message.arguments) ? message.arguments[0] : null;
+        if (!a || typeof a !== 'object' || Array.isArray(a)) continue;
+        const event = {target:message.target};
+        if ((typeof a.l === 'string' && a.l.length < 60) ||
+            (typeof a.l === 'number' && Number.isSafeInteger(a.l))) event.l = a.l;
+        for (const key of ['ln','ts']) {
+          const value = finiteNumber(a[key]);
+          if (value !== null) event[key] = value;
+        }
+        if (message.target === 'OnRegistration') {
+          const stage = finiteNumber(a.s);
+          if (stage !== null) event.s = stage;
+          // Client checkStage consumes registration.p only for ended/closed states.
+          if (stage === stages.ended || stage === stages.closed) {
+            const final = finiteNumber(a.p);
+            if (final !== null && final >= 1) event.p = final;
+          }
+        }
+        if (message.target === 'OnStage' || message.target === 'OnBetting') {
+          // Audit whether an explicit pre-start final-X field is actually sent.
+          // This does NOT infer a result from a sequential round ID.
+          const candidate = finiteNumber(a.f);
+          if (candidate !== null && candidate >= 1) event.f = candidate;
+        }
+        if (message.target === 'OnCrash') {
+          const final = finiteNumber(a.f);
+          if (final !== null && final >= 1) event.f = final;
+        }
+        if (message.target === 'OnBetting') {
+          const windowMs = finiteNumber(a.a);
+          if (windowMs !== null && windowMs >= 0) event.a = windowMs;
+        }
+        // Only report presence of known fairness metadata, never seed values.
+        const fairnessKeys = ['serverSeed','server_seed','serverSeedHash','server_seed_hash','clientSeed','client_seed','nonce'];
+        // Inspect only field NAMES in round events; never forward field values.
+        const found = Object.keys(a).filter(k =>
+          typeof k === 'string' && k.length <= 64 &&
+          /(?:seed|hash|nonce|fair|provab)/i.test(k)
+        ).slice(0, 12);
+        if (found.length) event.fairness_fields = found;
+        // Do not collect account info, betting details, headers, URLs or raw frames.
+        console.info('__CFP_EVENT__' + JSON.stringify(event));
       }
-      if (message.target === 'OnCrash' && typeof a.f === 'number' && Number.isFinite(a.f))
-        event.f = a.f;
-      // Do not collect bet amounts, user IDs, profits, or account information.
-      console.info('__CFP_EVENT__' + JSON.stringify(event));
     }
   }
   class ObservedSocket extends NativeSocket {
     constructor(...args) {
       super(...args);
-      super.addEventListener('message', ev => { try { inspect(ev.data); } catch (_) {} });
+      this.addEventListener('message', ev => {
+        try { inspect(ev.data); } catch (_) {}
+      });
     }
   }
   window.WebSocket = ObservedSocket;
@@ -72,8 +116,13 @@ class CapturePage(QWebEnginePage):
             data = json.loads(message[len(PREFIX):])
             if data.get("target") not in TARGETS:
                 return
-            permitted = {"target", "l", "ln", "ts", "f"}
+            permitted = {"target", "l", "ln", "ts", "f", "s", "p", "a", "fairness_fields"}
             if any(key not in permitted for key in data):
+                return
+            fields = data.get("fairness_fields", [])
+            import re
+            allowed_field = re.compile(r"^[A-Za-z0-9_\-]{1,64}$")
+            if not isinstance(fields, list) or len(fields) > 12 or any(not isinstance(f, str) or not allowed_field.fullmatch(f) or not re.search(r"seed|hash|nonce|fair|provab", f, re.I) for f in fields):
                 return
             record = {
                 "received_at_utc": datetime.now(timezone.utc).isoformat(),
