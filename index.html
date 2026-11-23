@@ -16,7 +16,7 @@ header{height:66px;display:flex;align-items:center;gap:13px;padding:0 20px;borde
 .plane{will-change:left,top}
 .multiplier{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:clamp(48px,9vw,76px);font-weight:900;direction:ltr;text-shadow:0 4px 18px #000}.multiplier small{font-size:.45em;color:#18e66b}
 .signal{border:2px solid #e83d42;border-radius:16px;background:linear-gradient(160deg,#210c13,#100b13);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;min-height:260px}
-.alert-icon{font-size:49px;color:#ff4148;line-height:1}.signal h2{font-size:25px;margin:12px 0 5px}.signal p{margin:0;color:#f7c84b;font-size:16px;line-height:1.6}.signal .sub{margin-top:12px;color:#aeb9c9;font-size:12px}
+.alert-icon{font-size:49px;color:#ff4148;line-height:1}.signal h2{font-size:25px;margin:12px 0 5px}.signal p{margin:0;color:#f7c84b;font-size:16px;line-height:1.6;white-space:pre-line}.signal .sub{margin-top:12px;color:#aeb9c9;font-size:12px}
 .bottom{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:12px;padding:0 16px 16px}
 .info{background:#111d2d;border:1px solid #293c54;border-radius:12px;padding:10px 12px;min-height:60px}.info label{display:block;color:#a7b5c8;font-size:11px;margin-bottom:5px}.info strong{font-size:15px}.green{color:#22e66b}
 button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(#13d64e,#079b37);color:white;box-shadow:0 5px 18px #00c94c33}button.secondary{background:#24364d;color:#eaf1fa;box-shadow:none;border:1px solid #3c526e}button:disabled{opacity:.45;cursor:not-allowed}
@@ -59,7 +59,7 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 const $=id=>document.getElementById(id);
 let active=false,results=[],lastEventAt=0,currentMultiplier=null,flightStartedAt=0,flightTimer=null,preRoundEvents=0,lastStageId=null,lastBettingRoundId=null;
 const seen=new Set();
-function setSignal(title,html){$("signalTitle").textContent=title;$("signalText").innerHTML=html;}
+function setSignal(title,text){$("signalTitle").textContent=title;$("signalText").textContent=text;}
 function drawFlight(on){
  $("flight").classList.toggle("active",on);
  if(!on){if(flightTimer){clearInterval(flightTimer);flightTimer=null;}return;}
@@ -82,7 +82,7 @@ function updatePlane(multiplier){
  const n=Math.max(1,Math.min(100000,Number(multiplier)||1));
  updatePlaneProgress(Math.max(0,Math.min(1,Math.log(n)/Math.log(30))));
 }
-function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}
+function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}\nfunction metricSummary(e){const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};const entries=Object.entries(m).filter(([k,v])=>typeof v==="number"&&Number.isFinite(v)).slice(0,5);return entries.map(([k,v])=>k+": "+v).join(" · ");}
 function liveMultiplier(e){
  const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};
  for(const [key,value] of Object.entries(m)){
@@ -97,7 +97,7 @@ function handleEvents(events){
   if(!e||!e.target)continue;
   const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
   if(seen.has(key))continue;seen.add(key);lastEventAt=Math.max(lastEventAt,Number(e.receivedAt)||0);
-  if(e.target==="OnStage"&&!active){preRoundEvents++;lastStageId=e.ln??e.roundId??null;setSignal("رصد مرحلة قبل الجولة","آخر معرّف مرحلة: "+(lastStageId??"غير متاح")+" · رسائل قبل البداية: "+preRoundEvents);$("connection").textContent="رصد مرحلة ما قبل الجولة";$("connection").className="green";}else if(e.target==="OnStart"){
+  if(e.target==="OnStage"&&!active){preRoundEvents++;lastStageId=e.ln??e.roundId??null;const detail=metricSummary(e);setSignal("رصد مرحلة قبل الجولة","معرّف المرحلة: "+(lastStageId??"غير متاح")+" · أحداث قبل البداية: "+preRoundEvents+(detail?"\n"+detail:""));$("connection").textContent="رصد مرحلة ما قبل الجولة";$("connection").className="green";}else if(e.target==="OnStart"){
    active=true;currentMultiplier=null;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"—";
    $("connection").textContent="بداية الجولة مرصودة";$("connection").className="green";
    $("multiplierDisplay").innerHTML="—<small>x</small>";drawFlight(true);
@@ -110,7 +110,7 @@ function handleEvents(events){
    setSignal("انتهت الجولة","تم التقاط رسالة نهاية الجولة. هذا حدث بعد الانفجار وليس إنذارًا مسبقًا.");
   }else if(e.target==="OnBetting"&&!active){
    preRoundEvents++;lastBettingRoundId=e.roundId??null;if(lastBettingRoundId!==null)$("roundNumber").textContent="#"+lastBettingRoundId;
-   $("connection").textContent="استقبال أحداث ما قبل الجولة";setSignal("مرحلة الرهان","معرّف الجولة المرصود: "+(lastBettingRoundId??"غير متاح")+" · رسائل قبل البداية: "+preRoundEvents+"<br>هذه بيانات متابعة وليست تنبؤًا.");
+   $("connection").textContent="استقبال أحداث ما قبل الجولة";setSignal("مرحلة الرهان","معرّف الجولة المرصود: "+(lastBettingRoundId??"غير متاح")+" · أحداث قبل البداية: "+preRoundEvents+(metricSummary(e)?"\n"+metricSummary(e):"")+"\nبيانات متابعة وليست تنبؤًا.");
   }else{
    const mult=liveMultiplier(e);
    if(mult!==null&&active){
