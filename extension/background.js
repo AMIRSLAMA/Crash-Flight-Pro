@@ -16,6 +16,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  if(!event||typeof event.target!=="string"||(!TARGETS.has(event.target)&&!RELEVANT.test(event.target)))return;
  const record={target:event.target.slice(0,80),receivedAt:Date.now(),captureVersion:typeof event.captureVersion==="string"?event.captureVersion.slice(0,24):null,roundId:typeof event.l==="number"||typeof event.l==="string"?String(event.l).slice(0,60):null};
  if(typeof event.ln==="number"&&Number.isFinite(event.ln))record.ln=event.ln;
+ if(typeof event.accountId==="string"&&event.accountId.length>0&&event.accountId.length<=80)record.accountId=event.accountId;
  if(typeof event.ts==="number"&&Number.isFinite(event.ts))record.ts=event.ts;
  if(event.target==="OnCrash"&&typeof event.f==="number"&&Number.isFinite(event.f))record.f=event.f;
  if(event.metrics&&typeof event.metrics==="object"){
