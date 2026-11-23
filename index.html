@@ -89,7 +89,22 @@ function liveMultiplier(e){
  }
  return null;
 }
-function updateNextRoundForecast(){\n const sample=observedCrashes.slice(-100).filter(n=>Number.isFinite(n)&&n>=1);\n const label=nextRoundLabel|| (lastBettingRoundId!==null?String(lastBettingRoundId):\"—\");\n $(\"nextRound\").textContent=label===\"—\"?\"بانتظار رقم الجولة\":\"#\"+label;\n if(sample.length<10){$(\"forecastRange\").textContent=\"عينة غير كافية\";$(\"forecastMeta\").textContent=\"تم جمع \"+sample.length+\" من 10 جولات مطلوبة لعرض نطاق تجريبي.\";return;}\n const sorted=[...sample].sort((a,b)=>a-b);\n const q=p=>sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*p))];\n const low=q(.25),mid=q(.5),high=q(.75);\n $(\"forecastRange\").textContent=low.toFixed(2)+\"x – \"+high.toFixed(2)+\"x\";\n $(\"forecastMeta\").textContent=\"الوسيط التاريخي: \"+mid.toFixed(2)+\"x · عينة آخر \"+sample.length+\" جولة. هذا نطاق إحصائي تجريبي لا يكشف نتيجة الجولة القادمة ولا يضمنها.\";\n}\nfunction estimateHistoricalRisk(current){
+function updateNextRoundForecast(){
+ const sample=observedCrashes.slice(-100).filter(n=>Number.isFinite(n)&&n>=1);
+ const label=nextRoundLabel||(lastBettingRoundId!==null?String(lastBettingRoundId):"—");
+ $("nextRound").textContent=label==="—"?"بانتظار رقم الجولة":"#"+label;
+ if(sample.length<10){
+  $("forecastRange").textContent="عينة غير كافية";
+  $("forecastMeta").textContent="تم جمع "+sample.length+" من 10 جولات مطلوبة لعرض نطاق تجريبي.";
+  return;
+ }
+ const sorted=[...sample].sort((a,b)=>a-b);
+ const q=p=>sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*p))];
+ const low=q(.25),mid=q(.5),high=q(.75);
+ $("forecastRange").textContent=low.toFixed(2)+"x – "+high.toFixed(2)+"x";
+ $("forecastMeta").textContent="الوسيط التاريخي: "+mid.toFixed(2)+"x · عينة آخر "+sample.length+" جولة. هذا نطاق إحصائي تجريبي لا يكشف نتيجة الجولة القادمة ولا يضمنها.";
+}
+function estimateHistoricalRisk(current){
  const sample=observedCrashes.filter(n=>Number.isFinite(n)&&n>=1);
  if(sample.length<30)return {ready:false,count:sample.length};
  const survived=sample.filter(n=>n>current);
