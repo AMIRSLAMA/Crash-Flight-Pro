@@ -12,6 +12,18 @@
    }else if(val&&typeof val==="object")extractMetrics(val,out,depth+1);
   }
  }
+ function collectNumericPaths(value,out,path="$",depth=0){
+  if(depth>7||out.length>=160||value==null)return;
+  if(typeof value==="number"&&Number.isFinite(value)){out.push({path:path.slice(0,180),value});return;}
+  if(Array.isArray(value)){for(let i=0;i<Math.min(value.length,40);i++)collectNumericPaths(value[i],out,path+"["+i+"]",depth+1);return;}
+  if(typeof value==="object"){
+   for(const [key,val] of Object.entries(value).slice(0,80)){
+    const safe=String(key).replace(/[^a-zA-Z0-9_$-]/g,"_").slice(0,48);
+    collectNumericPaths(val,out,path+"."+safe,depth+1);
+    if(out.length>=160)break;
+   }
+  }
+ }
  function describeShape(value,out,path="$",depth=0){
   if(depth>5||out.length>=120||value==null)return;
   if(Array.isArray(value)){out.push(path+":array["+Math.min(value.length,100)+"]");for(let i=0;i<Math.min(value.length,12);i++)describeShape(value[i],out,path+"["+i+"]",depth+1);return;}
@@ -34,7 +46,7 @@
     if(!TARGETS.has(target)&&!RELEVANT.test(target))continue;
     const metrics={};extractMetrics(args,metrics);extractMetrics(m,metrics);
     const shape=[];describeShape(args,shape);
-    const event={target,argCount:args.length,metrics,shape,captureVersion:CAPTURE_VERSION};
+    const numericPaths=[];collectNumericPaths(args,numericPaths);const event={target,argCount:args.length,metrics,shape,numericPaths,captureVersion:CAPTURE_VERSION};
     const payload=args.find(a=>a&&typeof a==="object")||{};
     if(target==="OnProfits"&&Array.isArray(payload.q)){
      payload.q.slice(0,20).forEach((point,index)=>{
