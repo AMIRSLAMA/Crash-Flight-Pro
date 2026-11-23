@@ -10,7 +10,7 @@
 .brand{font-size:15px;letter-spacing:2px;color:#9eb1c9;font-weight:700}.brand b{color:#f6bd4d}
 .label{font-size:14px;color:#aebbd0;margin-top:8px}.round{font-size:clamp(27px,8vw,38px);font-weight:900;direction:ltr;color:#fff;font-variant-numeric:tabular-nums}
 .divider{width:100%;height:1px;background:#2a3a50;margin:2px 0}
-.range{font-size:clamp(30px,8vw,40px);font-weight:900;color:#f6c45b;direction:ltr;white-space:nowrap;font-variant-numeric:tabular-nums}
+.forecast{font-size:clamp(42px,11vw,56px);font-weight:900;color:#f6c45b;direction:ltr;white-space:nowrap;font-variant-numeric:tabular-nums;text-shadow:0 4px 18px #0008}
 .meta{font-size:11px;color:#9eafc4;line-height:1.6;min-height:34px}
 button{width:100%;border:0;border-radius:14px;padding:16px 12px;font-size:16px;font-weight:900;color:#08120d;background:linear-gradient(#ffd16c,#e8a72d);cursor:pointer;box-shadow:0 8px 22px #e9a72d33}
 button:disabled{opacity:.55;cursor:wait}
@@ -26,50 +26,69 @@ button:disabled{opacity:.55;cursor:wait}
  </section>
  <div class="divider"></div>
  <section style="width:100%">
-  <div class="label">التوقع الإحصائي التجريبي</div>
-  <div class="range" id="forecast">—</div>
-  <div class="meta" id="meta">اضغط الزر بنفسك قبل بداية الجولة لحساب توقع جديد.</div>
+  <div class="label">التوقع الواحد للجولة القادمة</div>
+  <div class="forecast" id="forecast">—</div>
+  <div class="meta" id="meta">اضغط الزر بنفسك قبل بداية الجولة لحساب تقدير جديد.</div>
  </section>
  <button id="predict">احسب توقع الجولة القادمة</button>
  <div class="status" id="status">في انتظار طلبك</div>
- <div class="note">التوقع تقدير تاريخي وليس معرفة مسبقة بنتيجة الجولة أو ضمانًا لها.</div>
+ <div class="note">تقدير إحصائي من النتائج المسجلة، وليس معرفة مسبقة أو ضمانًا للنتيجة.</div>
 </main>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let crashes=[], nextRound=null, requestPending=false;
+let crashes=[], nextRound=null, requestPending=false, requestTimer=null;
 function askForEvents(){window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:String(Date.now())},"*");}
 function readEvents(events){
  if(!Array.isArray(events))return;
- crashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000).slice(-100);
+ crashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000).slice(-30);
  const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
  const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
  nextRound=betting?.roundId??stage?.roundId??null;
  if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
 }
-function quantile(sorted,p){return sorted[Math.min(sorted.length-1,Math.floor((sorted.length-1)*p))];}
 function calculate(){
- if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return;}
- if(crashes.length<10){$("forecast").textContent="عينة غير كافية";$("meta").textContent="تم رصد "+crashes.length+" من 10 نتائج مكتملة مطلوبة. لا نعرض رقمًا تخمينيًا من دون عينة.";return;}
- const sample=crashes.slice(-20).sort((a,b)=>a-b);
- const low=quantile(sample,.30), high=quantile(sample,.70), median=quantile(sample,.50);
- $("forecast").textContent=low.toFixed(2)+"x – "+high.toFixed(2)+"x";
- $("meta").textContent="آخر "+sample.length+" جولة · الوسيط "+median.toFixed(2)+"x. النطاق يتغير مع النتائج المسجلة ولا يضمن نتيجة الجولة التالية.";
+ if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
+ if(crashes.length<10){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 10 نتائج مكتملة على الأقل.";return false;}
+ // Weighted geometric estimate: recent results receive more weight, while high multipliers
+ // remain represented through the logarithmic mean instead of being discarded as outliers.
+ const sample=crashes.slice(-30);
+ let weightedLog=0,totalWeight=0;
+ sample.forEach((value,index)=>{
+  const weight=1+(index/(sample.length-1))*1.5;
+  weightedLog+=Math.log(value)*weight;
+  totalWeight+=weight;
+ });
+ const estimate=Math.exp(weightedLog/totalWeight);
+ $("forecast").textContent=estimate.toFixed(2)+"x";
+ const sorted=[...sample].sort((a,b)=>a-b);
+ const highCount=sample.filter(n=>n>=5).length;
+ $("meta").textContent="حساب موزون لآخر "+sample.length+" جولة، مع احتساب النتائج المرتفعة ("+highCount+" نتائج 5x فأكثر). الرقم تقديري فقط.";
+ return true;
 }
 window.addEventListener("message",e=>{
  if(e.source!==window||e.data?.source!=="crash-flight-extension")return;
  if(e.data.type==="events"){
   readEvents(e.data.events||[]);
-  if(requestPending){requestPending=false;$("predict").disabled=false;calculate();$("status").textContent="تم تحديث البيانات؛ التوقع محسوب يدويًا.";}
+  if(requestPending){
+   requestPending=false;clearTimeout(requestTimer);
+   $("predict").disabled=false;
+   const ok=calculate();
+   $("status").textContent=ok?"تم حساب رقم واحد بناءً على السجل الحالي.":"لم يكتمل الحساب؛ راجع سبب نقص البيانات.";
+  }
  }
  if(e.data.type==="unavailable"){
-  requestPending=false;$("predict").disabled=false;$("status").textContent="الإضافة غير متصلة؛ افتح اللعبة وفعّل الإضافة.";
+  requestPending=false;clearTimeout(requestTimer);$("predict").disabled=false;
+  $("status").textContent="الإضافة غير متصلة؛ افتح اللعبة وفعّل الإضافة.";
  }
 });
 $("predict").addEventListener("click",()=>{
- $("predict").disabled=true;$("status").textContent="جارٍ جلب آخر النتائج بطلبك...";
+ if(requestPending)return;
+ $("predict").disabled=true;$("status").textContent="جارٍ جلب النتائج بطلبك...";
  requestPending=true;askForEvents();
- window.setTimeout(()=>{if(requestPending){requestPending=false;$("predict").disabled=false;$("status").textContent="لم يصل رد من الإضافة. تأكد أنها متصلة ثم حاول مجددًا.";}},2500);
+ requestTimer=window.setTimeout(()=>{
+  if(requestPending){requestPending=false;$("predict").disabled=false;$("status").textContent="لم يصل رد من الإضافة. تأكد أنها متصلة ثم حاول مجددًا.";}
+ },2500);
 });
 </script>
 </body></html>
