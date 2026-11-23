@@ -14,7 +14,7 @@
  }
  function handle(raw){
   if(typeof raw!=="string")return;
-  for(const part of raw.split("\\x1e")){
+  for(const part of raw.split("\x1e")){
    if(!part)continue;let obj;try{obj=JSON.parse(part)}catch{continue}
    const messages=Array.isArray(obj)?obj:[obj];
    for(const m of messages){
