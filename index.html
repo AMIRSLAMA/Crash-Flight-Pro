@@ -1,71 +1,50 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080e1c">
-<title>Crash Flight Pro</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080e1c"><title>Crash Flight Pro</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;background:#080e1c;color:#eef5ff}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#17314c 0,#080e1c 65%);display:grid;place-items:center;padding:18px}
-main{width:min(900px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 18px}.brand{font-size:21px;font-weight:900}.brand span{color:#65e0c0}.tag{font-size:12px;color:#a9bfd3;border:1px solid #34485e;border-radius:30px;padding:7px 11px}
-.card{background:linear-gradient(150deg,#11243a,#0b1728);border:1px solid #2a4359;border-radius:22px;padding:clamp(15px,3vw,26px);box-shadow:0 24px 70px #0006}
-.heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.heading strong{color:#70e6c7;letter-spacing:1px}.connection{font-size:12px;color:#a9bfd3}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#d7a64d;margin-left:6px}.dot.on{background:#4cdbad;box-shadow:0 0 12px #4cdbad}
-.visual{height:clamp(220px,42vw,340px);margin:18px 0 12px;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 65% 90%,#1b3c50,#0b1728 70%)}svg{width:100%;height:100%;display:block}.grid{stroke:#294057;stroke-width:1;stroke-dasharray:5 9}.track{fill:none;stroke:#294e5c;stroke-width:5;stroke-linecap:round}.plane{font-size:42px;filter:drop-shadow(0 0 9px #70e6c7);transform-box:fill-box;transform-origin:center}.flying .plane{animation:flight 8s linear infinite}.landed .plane{animation-play-state:paused;transform:translate(0,0)}@keyframes flight{0%{transform:translate(0,0)}100%{transform:translate(-690px,-245px)}}
-.readouts{display:grid;grid-template-columns:1fr 1fr;gap:12px}.readout{background:#152b40;border:1px solid #2d4b61;border-radius:13px;padding:15px}.readout small{display:block;color:#9db6cc;font-size:12px;margin-bottom:8px}.readout strong{font-size:16px}.warning{margin:14px 0 0;padding:12px 14px;border-right:3px solid #d7a64d;background:#30291f;border-radius:8px;color:#e8d5b0;font-size:13px;line-height:1.8}
-.actions{display:flex;justify-content:center;margin-top:16px}button{border:0;border-radius:10px;background:#44d5b4;color:#06231f;font-weight:800;padding:12px 20px;cursor:pointer;font-size:14px}.foot{text-align:center;color:#829bb1;font-size:12px;margin-top:15px}.foot a{color:#70dfc2}
-@media(max-width:560px){header{align-items:flex-start;flex-direction:column}.readouts{grid-template-columns:1fr}.visual{height:230px}}
-@media(prefers-reduced-motion:reduce){.flying .plane{animation:none}}
-</style>
-</head>
-<body>
-<main>
-<header><div class="brand">✦ Crash <span>Flight Pro</span></div><div class="tag">WEB EDITION · بدون تحميل</div></header>
+:root{color-scheme:dark;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;background:#080e1c;color:#eef5ff}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#17314c 0,#080e1c 70%);padding:18px;display:grid;place-items:center}
+main{width:min(920px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px}.brand{font-size:21px;font-weight:900}.brand span{color:#65e0c0}.tag{font-size:12px;color:#a9bfd3;border:1px solid #34485e;border-radius:30px;padding:7px 11px}
+.card{background:linear-gradient(150deg,#11243a,#0b1728);border:1px solid #2a4359;border-radius:22px;padding:clamp(15px,3vw,25px);box-shadow:0 24px 70px #0006}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.top strong{color:#70e6c7;letter-spacing:1px}.status{font-size:12px;color:#a9bfd3}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#d7a64d;margin-left:6px}.dot.on{background:#4cdbad;box-shadow:0 0 12px #4cdbad}
+.visual{height:clamp(200px,35vw,300px);margin:15px 0 12px;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 65% 90%,#1b3c50,#0b1728 70%)}svg{width:100%;height:100%;display:block}.gridline{stroke:#294057;stroke-dasharray:5 9}.route{fill:none;stroke:#294e5c;stroke-width:5;stroke-linecap:round}.plane{font-size:42px;filter:drop-shadow(0 0 9px #70e6c7)}.running .plane{animation:fly 12s linear infinite}@keyframes fly{0%{transform:translate(0,0)}100%{transform:translate(-690px,-245px)}}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#152b40;border:1px solid #2d4b61;border-radius:13px;padding:13px}.stat small{display:block;color:#9db6cc;font-size:12px;margin-bottom:6px}.stat strong{font-size:17px}
+.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}button,.filebtn{border:0;border-radius:10px;background:#44d5b4;color:#06231f;font-weight:800;padding:11px 17px;cursor:pointer;font-size:14px}button.secondary,.filebtn.secondary{background:#243c53;color:#e6f1fb;border:1px solid #3a5871}button:disabled{opacity:.45;cursor:not-allowed}
+.entry{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}.entry input{width:145px;background:#091827;color:white;border:1px solid #38536a;border-radius:9px;padding:11px;font-size:15px}.entry label{font-size:13px;color:#a9bfd3}
+.notice{margin:13px 0 0;padding:11px 13px;border-right:3px solid #d7a64d;background:#30291f;border-radius:8px;color:#e8d5b0;font-size:12px;line-height:1.8}
+.history{margin-top:15px;border-top:1px solid #2a4359;padding-top:12px}.history-head{display:flex;justify-content:space-between;align-items:center;color:#b8cce0;font-size:13px}.history-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.chip{background:#152b40;border:1px solid #2d4b61;border-radius:9px;padding:7px 10px;font-size:13px}.chip b{color:#70e6c7}.foot{text-align:center;color:#829bb1;font-size:11px;margin-top:13px}
+@media(max-width:540px){header{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.entry input{flex:1;min-width:110px}}
+</style></head>
+<body><main>
+<header><div class="brand">✦ Crash <span>Flight Pro</span></div><div class="tag">نسخة ويب مستقلة · بدون إضافة</div></header>
 <section class="card">
- <div class="heading"><strong>✈ CRASH FLIGHT</strong><span class="connection"><i class="dot" id="dot"></i><span id="connection">في انتظار الإضافة</span></span></div>
- <div class="visual" id="visual" role="img" aria-label="مسار الطائرة أثناء الجولة">
-  <svg viewBox="0 0 900 360" preserveAspectRatio="none">
-   <path class="grid" d="M0 300H900M0 220H900M0 140H900M0 60H900"/>
-   <path class="track" d="M35 310 C170 300 180 265 300 260 S445 210 520 185 S690 120 865 35"/>
-   <text class="plane" id="plane" x="820" y="78">✈</text>
-  </svg>
+ <div class="top"><strong>✈ CRASH FLIGHT</strong><span class="status"><i class="dot" id="dot"></i><span id="status">جاهز لتسجيل جولة</span></span></div>
+ <div class="visual" id="visual"><svg viewBox="0 0 900 360" preserveAspectRatio="none"><path class="gridline" d="M0 300H900M0 220H900M0 140H900M0 60H900"/><path class="route" d="M35 310 C170 300 180 265 300 260 S445 210 520 185 S690 120 865 35"/><text class="plane" x="820" y="78">✈</text></svg></div>
+ <div class="stats">
+  <div class="stat"><small>حالة الجولة</small><strong id="roundState">لم تبدأ جولة</strong></div>
+  <div class="stat"><small>آخر نتيجة مسجلة</small><strong id="lastResult">—</strong></div>
  </div>
- <div class="readouts">
-  <div class="readout"><small>حالة الجولة</small><strong id="roundState">في انتظار بيانات الجولة</strong></div>
-  <div class="readout"><small>المؤشر المبكر</small><strong id="signal">لا توجد إشارة موثوقة</strong></div>
- </div>
- <p class="warning" id="detail">ثبّت إضافة Chrome وافتح تبويب اللعبة ثم ابدأ التسجيل من الإضافة. حركة الطائرة تمثل حالة الجولة فقط، وليست قراءة للمضاعف.</p>
- <div class="actions"><button id="connect">تحديث الاتصال</button></div>
-</section>
-<div class="foot">النتائج السابقة لا تكشف نتيجة الجولة القادمة · <a href="https://github.com/AMIRSLAMA/Crash-Flight-Pro/tree/main/extension" target="_blank" rel="noopener">إضافة المتصفح</a> · <a href="https://github.com/AMIRSLAMA/Crash-Flight-Pro" target="_blank" rel="noopener">GitHub</a></div>
+ <div class="controls"><button id="start">ابدأ تسجيل الجولة</button><button id="import" class="secondary">استيراد سجل CSV</button><input id="file" type="file" accept=".csv,.txt" hidden><button id="export" class="secondary">تصدير السجل</button></div>
+ <div class="entry"><label for="multiplier">المضاعف بعد انتهاء الجولة</label><input id="multiplier" type="number" min="1" max="1000000" step="0.01" placeholder="مثال 2.35"><button id="finish" disabled>تسجيل النتيجة</button></div>
+ <div class="notice" id="notice">ابدأ التسجيل عند بداية الجولة، ثم أدخل المضاعف الظاهر بعد انتهائها. لا يحتاج الموقع إلى إضافة أو صلاحيات للمتصفح، لكنه لا يستطيع قراءة اللعبة تلقائيًا من تبويب آخر.</div>
+ <div class="history"><div class="history-head"><span>آخر الجولات المسجلة</span><span id="count">0 جولة</span></div><div class="history-list" id="history"><span class="chip">لا توجد نتائج بعد</span></div></div>
+</section><div class="foot">تحليل وصفي للنتائج المسجلة فقط · لا يوجد ضمان أو معرفة مسبقة بنتيجة الجولة القادمة</div>
 </main>
 <script>
 "use strict";
-const $=id=>document.getElementById(id);
-let requestId=0,lastEvents=[];
-function askExtension(){window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:String(++requestId)},location.origin)}
-function showEvents(events){
- lastEvents=Array.isArray(events)?events:[];
- const latest=[...lastEvents].reverse().find(e=>["OnStart","OnStage","OnBetting","OnCrash"].includes(e.target));
- const connected=lastEvents.length>0;
- $("dot").classList.toggle("on",connected);
- $("connection").textContent=connected?"الإضافة متصلة · "+lastEvents.length+" رسالة":"لم تصل رسائل بعد";
- const active=latest&&(latest.target==="OnStart"||latest.target==="OnStage");
- const crashed=latest&&latest.target==="OnCrash";
- $("visual").classList.toggle("flying",!!active);
- $("visual").classList.toggle("landed",!!crashed);
- $("roundState").textContent=active?"الجولة جارية":crashed?"انتهت الجولة":latest?.target==="OnBetting"?"في انتظار بدء الجولة":"في انتظار بيانات الجولة";
- $("signal").textContent="لا توجد إشارة موثوقة";
- $("detail").textContent=active?"تم رصد رسالة بدء/مرحلة. حركة الطائرة توضح أن الجولة نشطة فقط، ولا تعني معرفة وقت الانفجار.":crashed?"تم رصد نهاية الجولة من رسالة OnCrash. لا يمكن استخدام هذه الرسالة كإنذار سابق.":connected?"تم استقبال رسائل من الإضافة، لكن لا توجد حاليًا بيانات كافية لإظهار حركة جولة نشطة.":"افتح تبويب اللعبة وابدأ التسجيل من الإضافة، ثم ارجع هنا واضغط تحديث الاتصال.";
+const $=id=>document.getElementById(id);const KEY="crash-flight-rounds-v1";let rounds=load(),running=false;
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x.filter(n=>Number.isFinite(n)&&n>=1):[]}catch{return[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify(rounds))}
+function render(){
+ $("count").textContent=rounds.length+" جولة";$("lastResult").textContent=rounds.length?rounds[rounds.length-1].toFixed(2)+"x":"—";
+ $("history").innerHTML=rounds.length?rounds.slice(-10).reverse().map((n,i)=>'<span class="chip">#'+(rounds.length-i)+' <b>'+n.toFixed(2)+'x</b></span>').join(""):'<span class="chip">لا توجد نتائج بعد</span>';
 }
-window.addEventListener("message",event=>{
- if(event.source!==window||event.origin!==location.origin||event.data?.source!=="crash-flight-extension")return;
- if(event.data.type==="events")showEvents(event.data.events);
- if(event.data.type==="unavailable"){$("connection").textContent="الإضافة غير متاحة";$("dot").classList.remove("on");$("detail").textContent="تأكد من تثبيت إضافة Chrome وتفعيلها على موقع Crash Flight Pro."}
-});
-$("connect").addEventListener("click",askExtension);
-askExtension();
-setInterval(askExtension,3000);
-</script>
-</body>
-</html>
+$("start").onclick=()=>{if(running)return;running=true;$("visual").classList.add("running");$("dot").classList.add("on");$("status").textContent="تسجيل الجولة يدويًا";$("roundState").textContent="الجولة جارية";$("start").disabled=true;$("finish").disabled=false;$("notice").textContent="الجولة قيد التسجيل. بعد ظهور النتيجة النهائية أدخل المضاعف واضغط تسجيل النتيجة."};
+$("finish").onclick=()=>{const n=Number($("multiplier").value);if(!running||!Number.isFinite(n)||n<1){$("notice").textContent="أدخل مضاعفًا صحيحًا يبدأ من 1x أو أكثر.";return}rounds.push(n);save();running=false;$("visual").classList.remove("running");$("dot").classList.remove("on");$("status").textContent="تم حفظ الجولة";$("roundState").textContent="انتهت الجولة";$("start").disabled=false;$("finish").disabled=true;$("multiplier").value="";$("notice").textContent="تم حفظ النتيجة محليًا على هذا الجهاز. لا تستخدم النتائج السابقة كضمان لتوقع الجولة التالية.";render()};
+$("import").onclick=()=>$("file").click();
+$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const text=await f.text();const values=text.split(/[\r\n,;]+/).map(s=>s.trim().replace(/x$/i,"")).filter(s=>/^\d+(\.\d+)?$/.test(s)).map(Number).filter(n=>n>=1);if(!values.length)throw Error("empty");rounds.push(...values);save();render();$("notice").textContent="تم استيراد "+values.length+" نتيجة. تم الاحتفاظ بالبيانات محليًا فقط."}catch{$("notice").textContent="تعذر قراءة الملف. استخدم CSV يحتوي على عمود مضاعفات مثل multiplier."}e.target.value=""};
+$("export").onclick=()=>{if(!rounds.length){$("notice").textContent="لا توجد نتائج لتصديرها.";return}const blob=new Blob(["multiplier\n"+rounds.map(n=>n.toFixed(2)).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="crash-flight-rounds.csv";a.click();URL.revokeObjectURL(a.href)};
+render();
+</script></body></html>
