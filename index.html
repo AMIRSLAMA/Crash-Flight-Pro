@@ -2,49 +2,73 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080e1c"><title>Crash Flight Pro</title>
+<meta name="theme-color" content="#080d18"><title>Sky Predictor</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;background:#080e1c;color:#eef5ff}*{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#17314c 0,#080e1c 70%);padding:18px;display:grid;place-items:center}
-main{width:min(920px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px}.brand{font-size:21px;font-weight:900}.brand span{color:#65e0c0}.tag{font-size:12px;color:#a9bfd3;border:1px solid #34485e;border-radius:30px;padding:7px 11px}
-.card{background:linear-gradient(150deg,#11243a,#0b1728);border:1px solid #2a4359;border-radius:22px;padding:clamp(15px,3vw,25px);box-shadow:0 24px 70px #0006}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.top strong{color:#70e6c7;letter-spacing:1px}.status{font-size:12px;color:#a9bfd3}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#d7a64d;margin-left:6px}.dot.on{background:#4cdbad;box-shadow:0 0 12px #4cdbad}
-.visual{height:clamp(200px,35vw,300px);margin:15px 0 12px;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 65% 90%,#1b3c50,#0b1728 70%)}svg{width:100%;height:100%;display:block}.gridline{stroke:#294057;stroke-dasharray:5 9}.route{fill:none;stroke:#294e5c;stroke-width:5;stroke-linecap:round}.plane{font-size:42px;filter:drop-shadow(0 0 9px #70e6c7)}.running .plane{animation:fly 12s linear infinite}@keyframes fly{0%{transform:translate(0,0)}100%{transform:translate(-690px,-245px)}}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#152b40;border:1px solid #2d4b61;border-radius:13px;padding:13px}.stat small{display:block;color:#9db6cc;font-size:12px;margin-bottom:6px}.stat strong{font-size:17px}
-.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}button,.filebtn{border:0;border-radius:10px;background:#44d5b4;color:#06231f;font-weight:800;padding:11px 17px;cursor:pointer;font-size:14px}button.secondary,.filebtn.secondary{background:#243c53;color:#e6f1fb;border:1px solid #3a5871}button:disabled{opacity:.45;cursor:not-allowed}
-.entry{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}.entry input{width:145px;background:#091827;color:white;border:1px solid #38536a;border-radius:9px;padding:11px;font-size:15px}.entry label{font-size:13px;color:#a9bfd3}
-.notice{margin:13px 0 0;padding:11px 13px;border-right:3px solid #d7a64d;background:#30291f;border-radius:8px;color:#e8d5b0;font-size:12px;line-height:1.8}
-.history{margin-top:15px;border-top:1px solid #2a4359;padding-top:12px}.history-head{display:flex;justify-content:space-between;align-items:center;color:#b8cce0;font-size:13px}.history-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.chip{background:#152b40;border:1px solid #2d4b61;border-radius:9px;padding:7px 10px;font-size:13px}.chip b{color:#70e6c7}.foot{text-align:center;color:#829bb1;font-size:11px;margin-top:13px}
-@media(max-width:540px){header{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.entry input{flex:1;min-width:110px}}
+:root{color-scheme:dark;font-family:Tahoma,"Segoe UI",sans-serif;background:#080d18;color:#f4f7fb}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:16px;background:radial-gradient(ellipse at 50% 5%,#172b43,#080d18 68%)}
+.app{width:min(620px,100%);border:1px solid #34475d;border-radius:22px;overflow:hidden;background:#080f1c;box-shadow:0 25px 80px #0009}
+header{height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #29384b;background:#0b1422}
+.brand{font-size:22px;font-weight:900;letter-spacing:.2px}.brand i{font-style:normal;color:#55e1bb}.window{color:#90a2b7;letter-spacing:5px;font-size:17px}
+main{padding:17px}.topline{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#a7b9cc}.live{display:flex;align-items:center;gap:7px}.dot{width:8px;height:8px;border-radius:50%;background:#d7a64d}.dot.on{background:#41e0ae;box-shadow:0 0 12px #41e0ae}
+.scene{height:225px;margin:13px 0;border:1px solid #1c3449;border-radius:15px;overflow:hidden;position:relative;background:radial-gradient(ellipse at 58% 100%,#17384b 0,#0b1a2b 56%,#081321 100%)}
+.scene:before,.scene:after{content:"";position:absolute;width:170px;height:45px;border-radius:50%;background:#172b40;filter:blur(13px);opacity:.8}.scene:before{top:48px;left:25px}.scene:after{bottom:25px;right:35px}
+svg{position:absolute;inset:0;width:100%;height:100%}.grid{stroke:#294157;stroke-dasharray:4 9;opacity:.55}.path{fill:none;stroke:#ff9b36;stroke-width:4;stroke-linecap:round;filter:drop-shadow(0 0 7px #ff9b36)}
+#plane{font-size:42px;transform-origin:center;filter:drop-shadow(0 0 9px #ff9b36)}
+.scene.flying #plane{animation:flight 7s linear infinite alternate}
+@keyframes flight{from{transform:translate(0,0) rotate(-8deg)}to{transform:translate(-300px,-135px) rotate(-8deg)}}
+.center{position:absolute;bottom:13px;left:18px;font-size:12px;color:#8fa8bf}
+.panel{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tile{background:#101f31;border:1px solid #263e54;border-radius:12px;padding:12px 14px;min-height:68px}.tile small{display:block;color:#8fa8bf;font-size:11px;margin-bottom:8px}.tile strong{font-size:19px}.accent{color:#62e4c0}
+.alert{margin-top:11px;border:1px solid #31475a;background:#101c2a;border-radius:11px;padding:12px 14px;min-height:53px;display:flex;align-items:center;gap:10px}.alert b{font-size:13px;color:#e8f1fa}.alert span{font-size:12px;color:#a5b8ca;line-height:1.6}
+footer{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 17px;border-top:1px solid #29384b;background:#0b1422;color:#91a6ba;font-size:11px}
+button{border:0;border-radius:9px;padding:9px 13px;background:#19b987;color:#03251d;font-weight:800;cursor:pointer}button.secondary{background:#24374c;color:#eaf2fa;border:1px solid #3b5369}
+@media(max-width:440px){.brand{font-size:18px}.scene{height:190px}.panel{gap:7px}.tile{padding:10px}.tile strong{font-size:16px}main{padding:12px}}
 </style></head>
-<body><main>
-<header><div class="brand">✦ Crash <span>Flight Pro</span></div><div class="tag">نسخة ويب مستقلة · بدون إضافة</div></header>
-<section class="card">
- <div class="top"><strong>✈ CRASH FLIGHT</strong><span class="status"><i class="dot" id="dot"></i><span id="status">جاهز لتسجيل جولة</span></span></div>
- <div class="visual" id="visual"><svg viewBox="0 0 900 360" preserveAspectRatio="none"><path class="gridline" d="M0 300H900M0 220H900M0 140H900M0 60H900"/><path class="route" d="M35 310 C170 300 180 265 300 260 S445 210 520 185 S690 120 865 35"/><text class="plane" x="820" y="78">✈</text></svg></div>
- <div class="stats">
-  <div class="stat"><small>حالة الجولة</small><strong id="roundState">لم تبدأ جولة</strong></div>
-  <div class="stat"><small>آخر نتيجة مسجلة</small><strong id="lastResult">—</strong></div>
- </div>
- <div class="controls"><button id="start">ابدأ تسجيل الجولة</button><button id="import" class="secondary">استيراد سجل CSV</button><input id="file" type="file" accept=".csv,.txt" hidden><button id="export" class="secondary">تصدير السجل</button></div>
- <div class="entry"><label for="multiplier">المضاعف بعد انتهاء الجولة</label><input id="multiplier" type="number" min="1" max="1000000" step="0.01" placeholder="مثال 2.35"><button id="finish" disabled>تسجيل النتيجة</button></div>
- <div class="notice" id="notice">ابدأ التسجيل عند بداية الجولة، ثم أدخل المضاعف الظاهر بعد انتهائها. لا يحتاج الموقع إلى إضافة أو صلاحيات للمتصفح، لكنه لا يستطيع قراءة اللعبة تلقائيًا من تبويب آخر.</div>
- <div class="history"><div class="history-head"><span>آخر الجولات المسجلة</span><span id="count">0 جولة</span></div><div class="history-list" id="history"><span class="chip">لا توجد نتائج بعد</span></div></div>
-</section><div class="foot">تحليل وصفي للنتائج المسجلة فقط · لا يوجد ضمان أو معرفة مسبقة بنتيجة الجولة القادمة</div>
+<body>
+<section class="app">
+<header><div class="brand">✈ <i>SKY</i> PREDICT</div><div class="window">—　□　×</div></header>
+<main>
+<div class="topline"><span>مراقبة جولات Crash</span><span class="live"><i class="dot" id="dot"></i><span id="connection">في انتظار اتصال اللعبة</span></span></div>
+<div class="scene" id="scene">
+<svg viewBox="0 0 620 225" preserveAspectRatio="none" aria-hidden="true">
+<path class="grid" d="M0 180H620M0 125H620M0 70H620M0 20H620"/>
+<path class="path" d="M20 205 C110 195 145 168 220 165 S350 115 410 95 S520 48 600 16"/>
+<text id="plane" x="545" y="60">✈</text>
+</svg><div class="center" id="flightLabel">الطائرة في وضع الانتظار</div>
+</div>
+<div class="panel">
+<div class="tile"><small>رقم الجولة</small><strong id="round">—</strong></div>
+<div class="tile"><small>آخر مضاعف مؤكد</small><strong class="accent" id="multiplier">—</strong></div>
+</div>
+<div class="alert"><b id="stateTitle">جاهز</b><span id="stateText">افتح اللعبة وفعّل التقاط البيانات من إضافة المتصفح. ستظهر حالة الجولة عند وصول أحداث فعلية.</span></div>
 </main>
+<footer><span>SKY PREDICT · مراقبة فعلية عند توفر البيانات</span><button class="secondary" id="details">حالة الاتصال</button></footer>
+</section>
 <script>
-"use strict";
-const $=id=>document.getElementById(id);const KEY="crash-flight-rounds-v1";let rounds=load(),running=false;
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x.filter(n=>Number.isFinite(n)&&n>=1):[]}catch{return[]}}
-function save(){localStorage.setItem(KEY,JSON.stringify(rounds))}
-function render(){
- $("count").textContent=rounds.length+" جولة";$("lastResult").textContent=rounds.length?rounds[rounds.length-1].toFixed(2)+"x":"—";
- $("history").innerHTML=rounds.length?rounds.slice(-10).reverse().map((n,i)=>'<span class="chip">#'+(rounds.length-i)+' <b>'+n.toFixed(2)+'x</b></span>').join(""):'<span class="chip">لا توجد نتائج بعد</span>';
+(()=>{'use strict';
+const $=id=>document.getElementById(id);let lastEventAt=0,lastRound='—',isFlying=false,latest=[];
+const req=()=>window.postMessage({source:'crash-flight-dashboard',type:'get-events',requestId:String(Date.now())},location.origin);
+window.addEventListener('message',e=>{
+ if(e.source!==window||e.origin!==location.origin||e.data?.source!=='crash-flight-extension')return;
+ if(e.data.type==='unavailable'){$('connection').textContent='الإضافة غير متاحة';return}
+ if(e.data.type!=='events'||!Array.isArray(e.data.events))return;
+ latest=e.data.events;
+ if(latest.length){const newest=latest[latest.length-1];lastEventAt=Number(newest.receivedAt)||0;render(latest)}
+});
+function render(events){
+ const recent=events.slice(-150);
+ const start=[...recent].reverse().find(x=>x.target==='OnStart');
+ const crash=[...recent].reverse().find(x=>x.target==='OnCrash');
+ if(start&&(!crash||start.receivedAt>crash.receivedAt)){
+  isFlying=true;$('scene').classList.add('flying');$('dot').classList.add('on');$('connection').textContent='بيانات حية';$('stateTitle').textContent='الجولة جارية';$('stateText').textContent='تم رصد بداية الجولة من اتصال اللعبة.';$('flightLabel').textContent='الطائرة في الجو';$('round').textContent=start.roundId||start.l||'جارية';return;
+ }
+ if(crash){
+  isFlying=false;$('scene').classList.remove('flying');$('dot').classList.add('on');$('connection').textContent='تم استقبال النتيجة';$('stateTitle').textContent='انتهت الجولة';$('stateText').textContent='تم التقاط رسالة نهاية الجولة من اللعبة.';$('flightLabel').textContent='انتهت الرحلة';
+  $('round').textContent=crash.roundId||crash.l||'—';$('multiplier').textContent=typeof crash.f==='number'?((crash.f>100?crash.f/100:crash.f).toFixed(2)+'x'):'وصلت النتيجة';return;
+ }
+ $('connection').textContent='متصل · بانتظار الجولة';$('dot').classList.add('on');
 }
-$("start").onclick=()=>{if(running)return;running=true;$("visual").classList.add("running");$("dot").classList.add("on");$("status").textContent="تسجيل الجولة يدويًا";$("roundState").textContent="الجولة جارية";$("start").disabled=true;$("finish").disabled=false;$("notice").textContent="الجولة قيد التسجيل. بعد ظهور النتيجة النهائية أدخل المضاعف واضغط تسجيل النتيجة."};
-$("finish").onclick=()=>{const n=Number($("multiplier").value);if(!running||!Number.isFinite(n)||n<1){$("notice").textContent="أدخل مضاعفًا صحيحًا يبدأ من 1x أو أكثر.";return}rounds.push(n);save();running=false;$("visual").classList.remove("running");$("dot").classList.remove("on");$("status").textContent="تم حفظ الجولة";$("roundState").textContent="انتهت الجولة";$("start").disabled=false;$("finish").disabled=true;$("multiplier").value="";$("notice").textContent="تم حفظ النتيجة محليًا على هذا الجهاز. لا تستخدم النتائج السابقة كضمان لتوقع الجولة التالية.";render()};
-$("import").onclick=()=>$("file").click();
-$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const text=await f.text();const values=text.split(/[\r\n,;]+/).map(s=>s.trim().replace(/x$/i,"")).filter(s=>/^\d+(\.\d+)?$/.test(s)).map(Number).filter(n=>n>=1);if(!values.length)throw Error("empty");rounds.push(...values);save();render();$("notice").textContent="تم استيراد "+values.length+" نتيجة. تم الاحتفاظ بالبيانات محليًا فقط."}catch{$("notice").textContent="تعذر قراءة الملف. استخدم CSV يحتوي على عمود مضاعفات مثل multiplier."}e.target.value=""};
-$("export").onclick=()=>{if(!rounds.length){$("notice").textContent="لا توجد نتائج لتصديرها.";return}const blob=new Blob(["multiplier\n"+rounds.map(n=>n.toFixed(2)).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="crash-flight-rounds.csv";a.click();URL.revokeObjectURL(a.href)};
-render();
+$('details').onclick=()=>{$('stateTitle').textContent='تشخيص الاتصال';$('stateText').textContent=latest.length?'عدد الرسائل المحفوظة: '+latest.length+' · آخر رسالة: '+new Date(lastEventAt).toLocaleTimeString():'لم تصل رسائل بعد. تأكد من تثبيت الإضافة وتفعيلها على صفحة اللعبة ثم أعد تحميل صفحة اللعبة.'};
+req();setInterval(req,1500);
+setInterval(()=>{if(lastEventAt&&Date.now()-lastEventAt>20000){$('dot').classList.remove('on');$('connection').textContent='لا توجد بيانات حديثة'}},3000);
+})();
 </script></body></html>

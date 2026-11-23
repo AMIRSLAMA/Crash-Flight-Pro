@@ -1,14 +1,13 @@
-# Crash Flight Pro
+# Sky Predictor
 
-A lightweight Arabic web dashboard for manually recording and reviewing completed Crash rounds. No Chrome extension, browser permissions, scraping, or betting automation is required.
+A compact Arabic crash-round monitor with a small aircraft display. The dashboard receives real round events only when the companion browser extension is installed and active on the supported game page.
 
-## Web edition
-Open the GitHub Pages site. Press **ابدأ تسجيل الجولة** when a round starts, then enter its final multiplier after it ends and press **تسجيل النتيجة**. You can also import/export a CSV containing a `multiplier` column. Records are stored in the browser's local storage on that device.
+## Use
+1. Install the unpacked extension from the `extension` folder in Chrome.
+2. Open the supported game page and use the extension popup to enable capture, then reload the game tab.
+3. Open the GitHub Pages dashboard. It shows a live round state when captured events arrive and the last multiplier only when a supported crash-result field is present.
 
-**Important limitation:** a normal website cannot read another tab's private game traffic or know when that game round starts/ends. Without a permitted integration supplied by the game, a browser extension, or a user-provided data export, recording is manual. This web edition deliberately does not claim automatic live capture or predict the next crash multiplier.
+## Important limits
+A standalone website cannot read another browser tab's private network traffic. Live monitoring therefore requires the companion extension or another permitted game-provided integration. A round-end event is not an early warning. The app does not claim to know the next crash point or display fabricated warnings.
 
-## Desktop analyzer
-The Windows desktop historical analyzer remains available in the repository. See the source files and workflow for setup/build instructions.
-
-## Responsible use
-Historical frequencies and medians describe past records only. They do not establish a reliable signal for the next independent round. No betting automation or credential collection is implemented.
+The interface is intentionally compact and does not fill the screen.
