@@ -14,6 +14,8 @@ The extension observes supported WebSocket SignalR JSON events and forwards sani
 - `OnStart` starts the plane animation when that event is actually observed.
 - `OnCrash` ends the animation and displays the final multiplier only when the event payload contains it.
 - Connection status reflects whether recent captured events are arriving.
+- The aircraft moves only from a numeric live-multiplier field actually present in captured game events; it does not fake flight progress from elapsed time.
+- Pre-round numeric fields are shown as observed telemetry, not interpreted as a forecast.
 - An `OnCrash` event is sent after the round ends; it is **not** an early warning.
 - The app does not know the next multiplier or guarantee a pre-crash alert. No prediction is displayed unless a genuinely predictive source is established and tested separately.
 
