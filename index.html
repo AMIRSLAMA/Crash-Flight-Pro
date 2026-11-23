@@ -42,6 +42,10 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 <div class="sub">الرسائل قبل الجولة تُعرض كما وردت من اللعبة. لا توجد بيانات مثبتة لتوقع المضاعف القادم.</div>
 </aside>
 </div>
+<div class="forecast">
+ <div><label>توقع تجريبي للجولة القادمة</label><strong id="forecastRange">عينة غير كافية</strong><small id="forecastMeta">بانتظار نتائج جولات مكتملة.</small></div>
+ <div class="round">رقم الجولة القادمة<b id="nextRound">بانتظار رقم الجولة</b></div>
+</div>
 <div class="bottom">
 <div class="info"><label>معرّف الجولة المرصود</label><strong id="roundNumber">—</strong></div>
 <div class="info"><label>حالة الاتصال</label><strong class="green" id="connection">جاهز</strong></div>
@@ -104,7 +108,7 @@ function handleEvents(events){
   if(!e||!e.target)continue;
   const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
   if(seen.has(key))continue;seen.add(key);lastEventAt=Math.max(lastEventAt,Number(e.receivedAt)||0);
-  if(e.target==="OnStage"&&!active){preRoundEvents++;lastStageId=e.ln??e.roundId??null;if(e.roundId){$("roundNumber").textContent="#"+e.roundId;nextRoundLabel=e.roundId;updateNextRoundForecast();}const detail=metricSummary(e);setSignal("رصد مرحلة قبل الجولة","معرّف المرحلة: "+(lastStageId??"غير متاح")+" · أحداث قبل البداية: "+preRoundEvents+(detail?"\n"+detail:""));$("connection").textContent="رصد مرحلة ما قبل الجولة";$("connection").className="green";}else if(e.target==="OnStart"){
+  if(e.target==="OnStage"&&!active){preRoundEvents++;lastStageId=e.roundId??null;if(e.roundId){$("roundNumber").textContent="#"+e.roundId;nextRoundLabel=e.roundId;updateNextRoundForecast();}const detail=metricSummary(e);setSignal("رصد مرحلة قبل الجولة","معرّف المرحلة: "+(lastStageId??"غير متاح")+" · أحداث قبل البداية: "+preRoundEvents+(detail?"\n"+detail:""));$("connection").textContent="رصد مرحلة ما قبل الجولة";$("connection").className="green";}else if(e.target==="OnStart"){
    active=true;currentMultiplier=null;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"—";preRoundEvents=0;
    $("connection").textContent="بداية الجولة مرصودة";$("connection").className="green";
    $("multiplierDisplay").innerHTML="—<small>x</small>";drawFlight(true);
