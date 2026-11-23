@@ -7,7 +7,7 @@ document.getElementById("start").onclick=async()=>{
   if(!/(^|\.)(1xbet\.com|eg1xbet\.com)$/.test(host))throw Error("التسجيل متاح فقط على صفحة اللعبة");
   await chrome.scripting.executeScript({target:{tabId:tab.id,allFrames:true},files:["inject.js"],world:"MAIN"});
   await chrome.scripting.executeScript({target:{tabId:tab.id,allFrames:true},files:["content.js"],world:"ISOLATED"});
-  status.textContent="التسجيل مفعل لهذا التحميل. لو اللعبة بدأت الاتصال بالفعل، أعد تحميل الصفحة ثم اضغط بدء التسجيل فورًا.";
+  status.textContent="تم تفعيل التسجيل. الإضافة تراقب اتصال اللعبة تلقائيًا من بداية تحميل الصفحة؛ أعد تحميل صفحة اللعبة بعد تثبيت التحديث.";
  }catch(e){status.textContent="خطأ: "+e.message}
 };
 document.getElementById("export").onclick=async()=>{
