@@ -1,5 +1,9 @@
 const KEY="crashFlightEvents";const ALLOWED=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{
+ if(message?.type==="crash-flight-get-events"){
+  chrome.storage.local.get({[KEY]:[]},data=>respond({events:data[KEY].slice(-2000)}));
+  return true;
+ }
  if(message?.type!=="crash-flight-event"||!sender.tab?.id)return;
  const event=message.event;
  if(!event||!ALLOWED.has(event.target))return;
