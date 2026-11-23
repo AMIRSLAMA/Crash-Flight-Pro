@@ -106,7 +106,7 @@ function readEvents(events){
  $("forecast").textContent=estimate.toFixed(2)+"x";
  $("meta").textContent="تجميعة أفضل 3 نماذج من "+evaluated.length+" نموذجًا: "+names+". الاختبار التاريخي لكل نموذج استخدم حتى "+winners[0].tests+" جولة تحقق. آخر 10 جولات: "+counts.L+" منخفضة / "+counts.M+" متوسطة / "+counts.H+" مرتفعة؛ الموجة "+wave+". عدد النتائج المتاحة: "+sample.length+". التجميعة تقلل الاعتماد على معادلة واحدة لكنها لا تتنبأ بنتيجة مؤكدة.";
  return true;
-}}
+}
 window.addEventListener("message",e=>{
  if(e.source!==window||e.data?.source!=="crash-flight-extension")return;
  if(e.data.type==="events"&&(!activeRequestId||e.data.requestId===activeRequestId)){
