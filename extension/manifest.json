@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Crash Flight Pro — Live Capture",
+  "name": "Sky Predictor — Live Capture",
   "version": "0.2.0",
-  "description": "Opt-in sanitized SignalR event capture and local dashboard bridge. No betting automation.",
+  "description": "Capture supported crash round events for the compact Sky Predictor dashboard.",
   "permissions": [
     "storage",
     "downloads",
