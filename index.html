@@ -58,7 +58,11 @@ $("saveAccount").addEventListener("click",()=>{
 });
 function readEvents(events){
  if(!Array.isArray(events))return;
- const crashEvents=events.filter(e=>e&&e.target==="OnCrash");\n crashEventCount=crashEvents.length;\n const validCrashes=crashEvents.filter(e=>Number.isFinite(Number(e.f))&&Number(e.f)>=1&&Number(e.f)<=100000);\n crashes=validCrashes.map(e=>Number(e.f)).slice(-200);\n lastCrashAt=validCrashes.length?validCrashes[validCrashes.length-1].receivedAt:null;
+ const crashEvents=events.filter(e=>e&&e.target==="OnCrash");
+ crashEventCount=crashEvents.length;
+ const validCrashes=crashEvents.filter(e=>Number.isFinite(Number(e.f))&&Number(e.f)>=1&&Number(e.f)<=100000);
+ crashes=validCrashes.map(e=>Number(e.f)).slice(-200);
+ lastCrashAt=validCrashes.length?validCrashes[validCrashes.length-1].receivedAt:null;
  const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
  const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
  nextRound=betting?.roundId??stage?.roundId??null;
@@ -101,7 +105,8 @@ window.addEventListener("message",e=>{
    $("predict").disabled=false;
    try{
     const ok=calculate();
-    const stamp=lastCrashAt?new Date(lastCrashAt).toLocaleTimeString("ar-EG"):"لا توجد نتيجة انفجار صالحة";\n    $("status").textContent=ok?"تم تحديث السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار. آخر نتيجة: "+stamp:"السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار؛ "+(lastCrashAt?"آخر نتيجة "+stamp:"لم تُلتقط قيمة انفجار صالحة")+". راجع اتصال الإضافة.";
+    const stamp=lastCrashAt?new Date(lastCrashAt).toLocaleTimeString("ar-EG"):"لا توجد نتيجة انفجار صالحة";
+    $("status").textContent=ok?"تم تحديث السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار. آخر نتيجة: "+stamp:"السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار؛ "+(lastCrashAt?"آخر نتيجة "+stamp:"لم تُلتقط قيمة انفجار صالحة")+". راجع اتصال الإضافة.";
    }catch(err){
     $("forecast").textContent="تعذر الحساب";
     $("meta").textContent="حدث خطأ أثناء التحليل؛ لم يتم تغيير سجل النتائج.";
