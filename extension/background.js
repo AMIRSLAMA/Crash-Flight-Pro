@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  if(event.metrics&&typeof event.metrics==="object"){
   record.metrics={};
   for(const [key,value] of Object.entries(event.metrics).slice(0,80)){
-   if(/^[a-zA-Z0-9_]{1,48}$/.test(key)&&((typeof value==="number"&&Number.isFinite(value))||(typeof value==="string"&&value.length<=48)))record.metrics[key]=value;
+   if(/^[a-zA-Z0-9_]{1,48}$/.test(key)&&(typeof value==="number"&&Number.isFinite(value)))record.metrics[key]=value;
   }
  }
  if(Number.isInteger(event.argCount))record.argCount=event.argCount;
