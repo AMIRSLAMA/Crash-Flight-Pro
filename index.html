@@ -30,14 +30,14 @@ button:disabled{opacity:.55;cursor:wait}
   <div class="forecast" id="forecast">—</div>
   <div class="meta" id="meta">اضغط الزر بنفسك قبل بداية الجولة لحساب تقدير جديد.</div>
  </section>
- <button id="predict">احسب توقع الجولة القادمة</button>
+ <button id="predict" hidden>احسب توقع الجولة القادمة</button>
  <div class="status" id="status">في انتظار طلبك</div>
  <div class="note">تقدير إحصائي من النتائج المسجلة، وليس معرفة مسبقة أو ضمانًا للنتيجة.</div>
 </main>
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let crashes=[], nextRound=null, requestPending=false, requestTimer=null;
+let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false;
 function askForEvents(){window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:String(Date.now())},"*");}
 function readEvents(events){
  if(!Array.isArray(events))return;
@@ -87,6 +87,9 @@ window.addEventListener("message",e=>{
  if(e.source!==window||e.data?.source!=="crash-flight-extension")return;
  if(e.data.type==="events"){
   readEvents(e.data.events||[]);
+  const latestCrash=[...(e.data.events||[])].reverse().find(ev=>ev&&ev.target==="OnCrash");
+  roundFinished=!!latestCrash;
+  $("predict").hidden=!roundFinished;
   if(requestPending){
    requestPending=false;clearTimeout(requestTimer);
    $("predict").disabled=false;
@@ -100,7 +103,7 @@ window.addEventListener("message",e=>{
  }
 });
 $("predict").addEventListener("click",()=>{
- if(requestPending)return;
+ if(requestPending||!roundFinished)return;
  $("predict").disabled=true;$("status").textContent="جارٍ جلب النتائج بطلبك...";
  requestPending=true;askForEvents();
  requestTimer=window.setTimeout(()=>{
