@@ -47,9 +47,11 @@ function askExtension(){window.postMessage({source:"crash-flight-dashboard",type
 function showEvents(events){
  lastEvents=Array.isArray(events)?events:[];
  const latest=[...lastEvents].reverse().find(e=>["OnStart","OnStage","OnBetting","OnCrash"].includes(e.target));
- const connected=lastEvents.length>0;
+ // Receiving this reply proves the dashboard bridge and extension service worker are reachable,
+ // even when the game has not emitted any captured events yet.
+ const connected=true;
  $("dot").classList.toggle("on",connected);
- $("connection").textContent=connected?"الإضافة متصلة · "+lastEvents.length+" رسالة":"لم تصل رسائل بعد";
+ $("connection").textContent=lastEvents.length?"الإضافة متصلة · "+lastEvents.length+" رسالة":"الإضافة متصلة · في انتظار أول رسالة";
  const active=latest&&(latest.target==="OnStart"||latest.target==="OnStage");
  const crashed=latest&&latest.target==="OnCrash";
  $("visual").classList.toggle("flying",!!active);
