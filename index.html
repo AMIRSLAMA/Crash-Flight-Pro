@@ -63,7 +63,7 @@ function render(events){
  }
  if(crash){
   isFlying=false;$('scene').classList.remove('flying');$('dot').classList.add('on');$('connection').textContent='تم استقبال النتيجة';$('stateTitle').textContent='انتهت الجولة';$('stateText').textContent='تم التقاط رسالة نهاية الجولة من اللعبة.';$('flightLabel').textContent='انتهت الرحلة';
-  $('round').textContent=crash.roundId||crash.l||'—';$('multiplier').textContent=typeof crash.f==='number'?(crash.f/100).toFixed(2)+'x':'وصلت النتيجة';return;
+  $('round').textContent=crash.roundId||crash.l||'—';$('multiplier').textContent=typeof crash.f==='number'?((crash.f>100?crash.f/100:crash.f).toFixed(2)+'x'):'وصلت النتيجة';return;
  }
  $('connection').textContent='متصل · بانتظار الجولة';$('dot').classList.add('on');
 }
