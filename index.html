@@ -41,63 +41,72 @@ let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFi
 function askForEvents(){window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:String(Date.now())},"*");}
 function readEvents(events){
  if(!Array.isArray(events))return;
- crashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000).slice(-30);
+ crashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000).slice(-200);
  const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
  const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
  nextRound=betting?.roundId??stage?.roundId??null;
  if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
-}
-function calculate(){
+}function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
- if(crashes.length<10){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 10 نتائج مكتملة على الأقل.";return false;}
- // Alternative model: regime-transition matching (Markov-style).
- // It looks for earlier occasions where the same low/medium/high pattern
- // appeared, then studies the outcomes that followed those patterns.
- const sample=crashes.slice(-30);
+ if(crashes.length<20){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 20 نتيجة على الأقل لتقييم النماذج بشكل أفضل.";return false;}
+ // Model tournament: compare rolling weighted-quantile models and
+ // regime-transition models on historical rounds not used to make each forecast.
+ const sample=crashes.slice(-200);
  const regime=n=>n<2?"L":n<5?"M":"H";
- const median=values=>{
-  if(!values.length)return 1;
-  const a=values.slice().sort((x,y)=>x-y),m=Math.floor(a.length/2);
-  return a.length%2?a[m]:(a[m-1]+a[m])/2;
+ const median=a=>{const x=a.slice().sort((p,q)=>p-q),m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2;};
+ const weightedQuantile=(values,q)=>{
+  const sorted=values.map((v,i)=>({v,w:i+1})).sort((a,b)=>a.v-b.v);
+  const total=sorted.reduce((z,x)=>z+x.w,0),target=q*total;let acc=0;
+  for(const x of sorted){acc+=x.w;if(acc>=target)return x.v;}
+  return sorted[sorted.length-1].v;
  };
- const predictAt=(history,contextLength)=>{
-  const base=median(history.slice(-10));
-  const context=history.slice(-contextLength).map(regime).join("");
-  const matches=[];
-  for(let j=contextLength;j<history.length;j++){
-   const prior=history.slice(j-contextLength,j).map(regime).join("");
-   if(prior===context)matches.push(history[j]);
+ const models=[];
+ const maxWindow=Math.min(100,Math.floor(sample.length/2));
+ [8,12,20,30,50,75,100].filter(w=>w<=maxWindow).forEach(w=>{
+  [0.25,0.4,0.5,0.6,0.75].forEach(q=>models.push({
+   name:"Q"+w+"-"+q,
+   predict:h=>weightedQuantile(h.slice(-w),q),
+   min:w
+  }));
+ });
+ [1,2,3].forEach(k=>models.push({
+  name:"R"+k,
+  min:12,
+  predict:h=>{
+   const key=h.slice(-k).map(regime).join("");
+   const matches=[];
+   for(let j=k;j<h.length;j++)if(h.slice(j-k,j).map(regime).join("")===key)matches.push(h[j]);
+   const base=median(h.slice(-12));
+   if(matches.length<2)return base;
+   const confidence=matches.length/(matches.length+5);
+   return Math.exp(Math.log(base)*(1-confidence)+Math.log(median(matches))*confidence);
   }
-  if(matches.length<2)return {value:base,matches:matches.length,base,matched:null};
-  const matched=median(matches);
-  const confidence=matches.length/(matches.length+4);
-  const value=Math.exp(Math.log(base)*(1-confidence)+Math.log(matched)*confidence);
-  return {value,matches:matches.length,base,matched};
- };
- const models=[1,2,3].map(contextLength=>{
+ }));
+ const evaluated=[];
+ for(const model of models){
   const errors=[];
-  for(let i=10;i<sample.length;i++){
-   const result=predictAt(sample.slice(0,i),contextLength);
-   errors.push(Math.abs(Math.log(result.value/sample[i])));
+  const first=Math.max(model.min,Math.floor(sample.length*0.45));
+  for(let i=first;i<sample.length;i++){
+   const pred=model.predict(sample.slice(0,i));
+   if(Number.isFinite(pred)&&pred>0)errors.push(Math.abs(Math.log(pred/sample[i])));
   }
-  errors.sort((x,y)=>x-y);
-  const mid=Math.floor(errors.length/2);
-  const score=errors.length%2?errors[mid]:(errors[mid-1]+errors[mid])/2;
-  return {contextLength,score,tests:errors.length};
- }).filter(m=>m.tests>=6);
- if(!models.length){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="لا توجد اختبارات تاريخية كافية لتقييم النموذج البديل.";return false;}
- models.sort((a,b)=>a.score-b.score||a.contextLength-b.contextLength);
- const best=models[0];
- const result=predictAt(sample,best.contextLength);
- const lastPattern=sample.slice(-best.contextLength).map(regime).join(" → ");
- const recent=sample.slice(-8);
- const counts={L:0,M:0,H:0};
- recent.forEach(n=>counts[regime(n)]++);
- const wave=counts.H>=4?"مرتفعة":counts.L>=5?"منخفضة":counts.M>=4?"متوسطة":"مختلطة";
- $("forecast").textContent=result.value.toFixed(2)+"x";
- $("meta").textContent="المعادلة البديلة: مطابقة نمط "+lastPattern+"؛ وجدت "+result.matches+" حالة مشابهة في السجل. "+(result.matched===null?"لم تتوفر حالات كافية، فاستخدمت وسيط آخر 10 نتائج.":"وسيط نتائج الحالات المشابهة "+result.matched.toFixed(2)+"x، مع دمجه تدريجيًا مع وسيط آخر 10 نتائج.")+" اختبار تاريخي: "+best.tests+" جولة. الموجة الأخيرة: "+wave+". هذا نموذج تجريبي لا يكشف نتيجة الجولة ولا يضمن استمرار النمط.";
+  if(errors.length<6)continue;
+  evaluated.push({...model,score:median(errors),tests:errors.length});
+ }
+ if(!evaluated.length){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="لم تتوفر اختبارات تاريخية كافية لمقارنة النماذج.";return false;}
+ evaluated.sort((a,b)=>a.score-b.score);
+ const winners=evaluated.slice(0,Math.min(3,evaluated.length));
+ const weightedLog=winners.reduce((sum,m)=>sum+Math.log(Math.max(1,m.predict(sample)))/(m.score+0.05),0);
+ const totalWeight=winners.reduce((sum,m)=>sum+1/(m.score+0.05),0);
+ const estimate=Math.exp(weightedLog/totalWeight);
+ const recent=sample.slice(-10),counts={L:0,M:0,H:0};
+ recent.forEach(v=>counts[regime(v)]++);
+ const wave=counts.H>=5?"مرتفعة":counts.L>=6?"منخفضة":counts.M>=5?"متوسطة":"مختلطة";
+ const names=winners.map(m=>m.name).join("، ");
+ $("forecast").textContent=estimate.toFixed(2)+"x";
+ $("meta").textContent="تجميعة أفضل 3 نماذج من "+evaluated.length+" نموذجًا: "+names+". الاختبار التاريخي لكل نموذج استخدم حتى "+winners[0].tests+" جولة تحقق. آخر 10 جولات: "+counts.L+" منخفضة / "+counts.M+" متوسطة / "+counts.H+" مرتفعة؛ الموجة "+wave+". عدد النتائج المتاحة: "+sample.length+". التجميعة تقلل الاعتماد على معادلة واحدة لكنها لا تتنبأ بنتيجة مؤكدة.";
  return true;
-}
+}}
 window.addEventListener("message",e=>{
  if(e.source!==window||e.data?.source!=="crash-flight-extension")return;
  if(e.data.type==="events"){
