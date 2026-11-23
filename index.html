@@ -2,49 +2,69 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080e1c"><title>Crash Flight Pro</title>
+<meta name="theme-color" content="#070b15"><title>Sky Predictor</title>
 <style>
-:root{color-scheme:dark;font-family:system-ui,"Segoe UI",Tahoma,sans-serif;background:#080e1c;color:#eef5ff}*{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#17314c 0,#080e1c 70%);padding:18px;display:grid;place-items:center}
-main{width:min(920px,100%)}header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px}.brand{font-size:21px;font-weight:900}.brand span{color:#65e0c0}.tag{font-size:12px;color:#a9bfd3;border:1px solid #34485e;border-radius:30px;padding:7px 11px}
-.card{background:linear-gradient(150deg,#11243a,#0b1728);border:1px solid #2a4359;border-radius:22px;padding:clamp(15px,3vw,25px);box-shadow:0 24px 70px #0006}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.top strong{color:#70e6c7;letter-spacing:1px}.status{font-size:12px;color:#a9bfd3}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#d7a64d;margin-left:6px}.dot.on{background:#4cdbad;box-shadow:0 0 12px #4cdbad}
-.visual{height:clamp(200px,35vw,300px);margin:15px 0 12px;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 65% 90%,#1b3c50,#0b1728 70%)}svg{width:100%;height:100%;display:block}.gridline{stroke:#294057;stroke-dasharray:5 9}.route{fill:none;stroke:#294e5c;stroke-width:5;stroke-linecap:round}.plane{font-size:42px;filter:drop-shadow(0 0 9px #70e6c7)}.running .plane{animation:fly 12s linear infinite}@keyframes fly{0%{transform:translate(0,0)}100%{transform:translate(-690px,-245px)}}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#152b40;border:1px solid #2d4b61;border-radius:13px;padding:13px}.stat small{display:block;color:#9db6cc;font-size:12px;margin-bottom:6px}.stat strong{font-size:17px}
-.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}button,.filebtn{border:0;border-radius:10px;background:#44d5b4;color:#06231f;font-weight:800;padding:11px 17px;cursor:pointer;font-size:14px}button.secondary,.filebtn.secondary{background:#243c53;color:#e6f1fb;border:1px solid #3a5871}button:disabled{opacity:.45;cursor:not-allowed}
-.entry{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}.entry input{width:145px;background:#091827;color:white;border:1px solid #38536a;border-radius:9px;padding:11px;font-size:15px}.entry label{font-size:13px;color:#a9bfd3}
-.notice{margin:13px 0 0;padding:11px 13px;border-right:3px solid #d7a64d;background:#30291f;border-radius:8px;color:#e8d5b0;font-size:12px;line-height:1.8}
-.history{margin-top:15px;border-top:1px solid #2a4359;padding-top:12px}.history-head{display:flex;justify-content:space-between;align-items:center;color:#b8cce0;font-size:13px}.history-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.chip{background:#152b40;border:1px solid #2d4b61;border-radius:9px;padding:7px 10px;font-size:13px}.chip b{color:#70e6c7}.foot{text-align:center;color:#829bb1;font-size:11px;margin-top:13px}
-@media(max-width:540px){header{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.entry input{flex:1;min-width:110px}}
+:root{color-scheme:dark;font-family:Tahoma,"Segoe UI",sans-serif;background:#070b15;color:#f4f7ff}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:14px;background:radial-gradient(ellipse at 25% 0,#172a45 0,#070b15 65%)}
+.app{width:min(760px,100%);min-height:420px;border:1px solid #344052;border-radius:22px;overflow:hidden;background:#080e1b;box-shadow:0 22px 70px #0009}
+header{height:66px;display:flex;align-items:center;gap:13px;padding:0 20px;border-bottom:1px solid #263247;background:#090d16}
+.logo{font-size:29px;color:#f5f8ff}.name{font-size:22px;font-weight:900;letter-spacing:.2px}.name span{color:#f7b83c}.spacer{flex:1}.window{display:flex;gap:16px;color:#9ba9bb;font-size:20px}
+.main{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(210px,.8fr);gap:14px;padding:16px}
+.flight{position:relative;min-height:260px;border:1px solid #26364e;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 55% 100%,#183451,#08101f 68%)}
+.skyline{position:absolute;inset:0;width:100%;height:100%}.cloud{fill:#1d2d48;opacity:.65}.grid{stroke:#263b55;stroke-dasharray:4 8;stroke-width:1}.flight-path{fill:none;stroke:#ffb72e;stroke-width:4;stroke-linecap:round;filter:drop-shadow(0 0 7px #ff9e20)}
+.plane{position:absolute;left:48%;top:32%;font-size:46px;transform:rotate(-18deg);filter:drop-shadow(0 0 10px #f4b53c);transition:left .5s,top .5s}
+.flight.active .plane{animation:cruise 7s ease-in-out infinite alternate}
+@keyframes cruise{from{left:24%;top:66%}to{left:72%;top:14%}}
+.multiplier{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:clamp(48px,9vw,76px);font-weight:900;direction:ltr;text-shadow:0 4px 18px #000}.multiplier small{font-size:.45em;color:#18e66b}
+.signal{border:2px solid #e83d42;border-radius:16px;background:linear-gradient(160deg,#210c13,#100b13);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;min-height:260px}
+.alert-icon{font-size:49px;color:#ff4148;line-height:1}.signal h2{font-size:25px;margin:12px 0 5px}.signal p{margin:0;color:#f7c84b;font-size:16px;line-height:1.6}.signal .sub{margin-top:12px;color:#aeb9c9;font-size:12px}
+.bottom{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:12px;padding:0 16px 16px}
+.info{background:#111d2d;border:1px solid #293c54;border-radius:12px;padding:10px 12px;min-height:60px}.info label{display:block;color:#a7b5c8;font-size:11px;margin-bottom:5px}.info strong{font-size:15px}.green{color:#22e66b}
+button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(#13d64e,#079b37);color:white;box-shadow:0 5px 18px #00c94c33}button.secondary{background:#24364d;color:#eaf1fa;box-shadow:none;border:1px solid #3c526e}button:disabled{opacity:.45;cursor:not-allowed}
+.tools{padding:0 16px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.tools input{width:110px;background:#0b1524;border:1px solid #354a63;border-radius:9px;color:white;padding:10px;font-size:14px}.tools label{font-size:12px;color:#aebbd0}.history{padding:0 16px 14px;color:#93a5bb;font-size:11px;display:flex;gap:7px;flex-wrap:wrap}.history b{color:#65e5ae}.foot{text-align:center;color:#71839b;font-size:10px;padding:0 12px 12px}
+@media(max-width:570px){.main{grid-template-columns:1fr}.flight,.signal{min-height:190px}.bottom{grid-template-columns:1fr 1fr}.bottom button{grid-column:1/-1}.window{display:none}.name{font-size:19px}}
 </style></head>
-<body><main>
-<header><div class="brand">✦ Crash <span>Flight Pro</span></div><div class="tag">نسخة ويب مستقلة · بدون إضافة</div></header>
-<section class="card">
- <div class="top"><strong>✈ CRASH FLIGHT</strong><span class="status"><i class="dot" id="dot"></i><span id="status">جاهز لتسجيل جولة</span></span></div>
- <div class="visual" id="visual"><svg viewBox="0 0 900 360" preserveAspectRatio="none"><path class="gridline" d="M0 300H900M0 220H900M0 140H900M0 60H900"/><path class="route" d="M35 310 C170 300 180 265 300 260 S445 210 520 185 S690 120 865 35"/><text class="plane" x="820" y="78">✈</text></svg></div>
- <div class="stats">
-  <div class="stat"><small>حالة الجولة</small><strong id="roundState">لم تبدأ جولة</strong></div>
-  <div class="stat"><small>آخر نتيجة مسجلة</small><strong id="lastResult">—</strong></div>
- </div>
- <div class="controls"><button id="start">ابدأ تسجيل الجولة</button><button id="import" class="secondary">استيراد سجل CSV</button><input id="file" type="file" accept=".csv,.txt" hidden><button id="export" class="secondary">تصدير السجل</button></div>
- <div class="entry"><label for="multiplier">المضاعف بعد انتهاء الجولة</label><input id="multiplier" type="number" min="1" max="1000000" step="0.01" placeholder="مثال 2.35"><button id="finish" disabled>تسجيل النتيجة</button></div>
- <div class="notice" id="notice">ابدأ التسجيل عند بداية الجولة، ثم أدخل المضاعف الظاهر بعد انتهائها. لا يحتاج الموقع إلى إضافة أو صلاحيات للمتصفح، لكنه لا يستطيع قراءة اللعبة تلقائيًا من تبويب آخر.</div>
- <div class="history"><div class="history-head"><span>آخر الجولات المسجلة</span><span id="count">0 جولة</span></div><div class="history-list" id="history"><span class="chip">لا توجد نتائج بعد</span></div></div>
-</section><div class="foot">تحليل وصفي للنتائج المسجلة فقط · لا يوجد ضمان أو معرفة مسبقة بنتيجة الجولة القادمة</div>
-</main>
+<body>
+<section class="app">
+<header><div class="logo">✈</div><div class="name">Sky <span>Predictor</span></div><div class="spacer"></div><div class="window" aria-hidden="true">—　□　×</div></header>
+<div class="main">
+<div class="flight" id="flight">
+<svg class="skyline" viewBox="0 0 600 300" preserveAspectRatio="none" aria-hidden="true">
+<path class="grid" d="M0 70H600M0 140H600M0 210H600M100 0V300M220 0V300M340 0V300M460 0V300"/>
+<path class="cloud" d="M0 72Q20 43 49 65Q71 32 105 66Q132 56 148 83H0ZM405 120Q428 89 456 111Q479 78 513 110Q550 94 574 130H405Z"/>
+<path class="flight-path" d="M18 260 Q145 225 225 184 T410 105 T585 35"/>
+</svg>
+<div class="plane" id="plane">✈</div>
+<div class="multiplier" id="multiplierDisplay">—<small>x</small></div>
+</div>
+<aside class="signal">
+<div class="alert-icon">⚠</div><h2 id="signalTitle">لا توجد إشارة مبكرة</h2>
+<p id="signalText">مراقبة الجولة<br>بانتظار بيانات حقيقية</p>
+<div class="sub">لن يظهر تحذير تنبؤي بدون دليل من مصدر الجولة</div>
+</aside>
+</div>
+<div class="bottom">
+<div class="info"><label>رقم الجولة</label><strong id="roundNumber">—</strong></div>
+<div class="info"><label>حالة الاتصال</label><strong class="green" id="connection">جاهز</strong></div>
+<button id="start">بدء تسجيل جولة</button>
+</div>
+<div class="tools">
+<label for="result">النتيجة بعد الانتهاء</label><input id="result" type="number" min="1" step=".01" placeholder="مثال 2.35">
+<button class="secondary" id="save">حفظ النتيجة</button>
+<button class="secondary" id="export">تصدير السجل</button>
+<button class="secondary" id="historyToggle">السجل</button>
+</div>
+<div class="history" id="history" hidden></div>
+<div class="foot">واجهة تجريبية صغيرة · تسجيل النتائج يدويًا حاليًا · لا تدّعي معرفة نتيجة الجولة القادمة</div>
+</section>
 <script>
 "use strict";
-const $=id=>document.getElementById(id);const KEY="crash-flight-rounds-v1";let rounds=load(),running=false;
-function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(x)?x.filter(n=>Number.isFinite(n)&&n>=1):[]}catch{return[]}}
-function save(){localStorage.setItem(KEY,JSON.stringify(rounds))}
-function render(){
- $("count").textContent=rounds.length+" جولة";$("lastResult").textContent=rounds.length?rounds[rounds.length-1].toFixed(2)+"x":"—";
- $("history").innerHTML=rounds.length?rounds.slice(-10).reverse().map((n,i)=>'<span class="chip">#'+(rounds.length-i)+' <b>'+n.toFixed(2)+'x</b></span>').join(""):'<span class="chip">لا توجد نتائج بعد</span>';
-}
-$("start").onclick=()=>{if(running)return;running=true;$("visual").classList.add("running");$("dot").classList.add("on");$("status").textContent="تسجيل الجولة يدويًا";$("roundState").textContent="الجولة جارية";$("start").disabled=true;$("finish").disabled=false;$("notice").textContent="الجولة قيد التسجيل. بعد ظهور النتيجة النهائية أدخل المضاعف واضغط تسجيل النتيجة."};
-$("finish").onclick=()=>{const n=Number($("multiplier").value);if(!running||!Number.isFinite(n)||n<1){$("notice").textContent="أدخل مضاعفًا صحيحًا يبدأ من 1x أو أكثر.";return}rounds.push(n);save();running=false;$("visual").classList.remove("running");$("dot").classList.remove("on");$("status").textContent="تم حفظ الجولة";$("roundState").textContent="انتهت الجولة";$("start").disabled=false;$("finish").disabled=true;$("multiplier").value="";$("notice").textContent="تم حفظ النتيجة محليًا على هذا الجهاز. لا تستخدم النتائج السابقة كضمان لتوقع الجولة التالية.";render()};
-$("import").onclick=()=>$("file").click();
-$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const text=await f.text();const values=text.split(/[\r\n,;]+/).map(s=>s.trim().replace(/x$/i,"")).filter(s=>/^\d+(\.\d+)?$/.test(s)).map(Number).filter(n=>n>=1);if(!values.length)throw Error("empty");rounds.push(...values);save();render();$("notice").textContent="تم استيراد "+values.length+" نتيجة. تم الاحتفاظ بالبيانات محليًا فقط."}catch{$("notice").textContent="تعذر قراءة الملف. استخدم CSV يحتوي على عمود مضاعفات مثل multiplier."}e.target.value=""};
-$("export").onclick=()=>{if(!rounds.length){$("notice").textContent="لا توجد نتائج لتصديرها.";return}const blob=new Blob(["multiplier\n"+rounds.map(n=>n.toFixed(2)).join("\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="crash-flight-rounds.csv";a.click();URL.revokeObjectURL(a.href)};
-render();
-</script></body></html>
+const $=id=>document.getElementById(id),KEY="sky-predictor-results-v1";let active=false,round=0,results=[];
+try{results=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(results))results=[]}catch{results=[]}
+function showHistory(){$("history").hidden=false;$("history").innerHTML=results.length?results.slice(-12).reverse().map((v,i)=>'<span>#'+(results.length-i)+' <b>'+Number(v).toFixed(2)+'x</b></span>').join("　·　"):"لا توجد نتائج محفوظة";}
+$("start").addEventListener("click",()=>{if(active)return;active=true;round++;$("roundNumber").textContent="#"+round;$("connection").textContent="تسجيل يدوي";$("flight").classList.add("active");$("signalTitle").textContent="الجولة قيد التسجيل";$("signalText").innerHTML="الطيارة تتحرك<br>بانتظار النتيجة النهائية";$("multiplierDisplay").innerHTML="LIVE<small> ·</small>";$("start").disabled=true;});
+$("save").addEventListener("click",()=>{const n=Number($("result").value);if(!active||!Number.isFinite(n)||n<1){$("signalTitle").textContent="أدخل نتيجة الجولة";$("signalText").textContent="ابدأ التسجيل ثم احفظ المضاعف بعد انتهائها";return;}results.push(n);localStorage.setItem(KEY,JSON.stringify(results));active=false;$("flight").classList.remove("active");$("start").disabled=false;$("connection").textContent="تم الحفظ";$("multiplierDisplay").innerHTML=n.toFixed(2)+'<small>x</small>';$("signalTitle").textContent="انتهت الجولة";$("signalText").textContent="تم حفظ النتيجة — لا توجد إشارة للجولة القادمة";$("result").value="";});
+$("historyToggle").addEventListener("click",showHistory);
+$("export").addEventListener("click",()=>{if(!results.length){$("signalText").textContent="لا توجد نتائج للتصدير";return;}const blob=new Blob(["multiplier\n"+results.join("\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sky-predictor-results.csv";a.click();URL.revokeObjectURL(a.href);});
+</script>
+</body></html>
