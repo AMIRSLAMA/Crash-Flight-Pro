@@ -12,20 +12,6 @@
    }else if(val&&typeof val==="object")extractMetrics(val,out,depth+1);
   }
  }
- function findAccountId(value,depth=0){
-  if(depth>7||value==null)return null;
-  if(Array.isArray(value)){for(const item of value.slice(0,50)){const found=findAccountId(item,depth+1);if(found!==null)return found;}return null;}
-  if(typeof value!=="object")return null;
-  const keys=Object.keys(value);
-  for(const key of keys){
-   if(/^(account_?id|user_?id|player_?id|member_?id|customer_?id|accountnumber|account_number|uid)$/i.test(key)){
-    const v=value[key];
-    if((typeof v==="string"&&v.trim().length>0&&v.trim().length<=80)||(typeof v==="number"&&Number.isSafeInteger(v)))return String(v).trim();
-   }
-  }
-  for(const val of Object.values(value).slice(0,100)){if(val&&typeof val==="object"){const found=findAccountId(val,depth+1);if(found!==null)return found;}}
-  return null;
- }
  function describeShape(value,out,path="$",depth=0){
   if(depth>5||out.length>=120||value==null)return;
   if(Array.isArray(value)){out.push(path+":array["+Math.min(value.length,100)+"]");for(let i=0;i<Math.min(value.length,12);i++)describeShape(value[i],out,path+"["+i+"]",depth+1);return;}
@@ -49,8 +35,6 @@
     const shape=[];describeShape(args,shape);
     const event={target,argCount:args.length,metrics,shape,captureVersion:CAPTURE_VERSION};
     const payload=args.find(a=>a&&typeof a==="object")||{};
-    const accountId=findAccountId(args)??findAccountId(m);
-    if(accountId!==null)event.accountId=accountId;
     if(target==="OnProfits"&&Array.isArray(payload.q)){
      payload.q.slice(0,20).forEach((point,index)=>{
       if(!point||typeof point!=="object")return;
