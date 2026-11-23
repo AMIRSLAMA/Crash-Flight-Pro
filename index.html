@@ -37,7 +37,7 @@ button:disabled{opacity:.55;cursor:wait}
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, lastForecast=null;
+let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, lastForecast=null, lastPredictedRound=null;
 function askForEvents(){window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:String(Date.now())},"*");}
 function readEvents(events){
  if(!Array.isArray(events))return;
