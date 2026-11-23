@@ -6,11 +6,43 @@
 <title>Crash Flight Pro | Live Analysis Workspace</title>
 <style>
 :root{font-family:system-ui,"Segoe UI",Tahoma,sans-serif;color:#eef4ff;background:#080e1c}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% 0%,#152d4b 0%,#080e1c 55%);min-height:100vh}header{border-bottom:1px solid #24384e;background:#0b1527c9;backdrop-filter:blur(14px)}.wrap{max-width:1200px;margin:auto;padding:22px}header .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-size:23px;font-weight:850;letter-spacing:.4px}.brand span{color:#52dbba}.tag{font-size:12px;color:#a1b4cd;border:1px solid #314358;border-radius:30px;padding:8px 12px}h1{font-size:clamp(28px,4vw,43px);margin:28px 0 10px}p{color:#a6b9d1;line-height:1.85}.intro{max-width:800px}.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0}.panel{background:#101c30e8;border:1px solid #2b3b51;border-radius:18px;padding:23px;min-width:0}.panel h2{font-size:18px;margin:0 0 14px}.sub{font-size:13px;color:#9db1c9}input[type=file]{display:none}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}button,.upload{border:0;border-radius:10px;background:#44d5b4;color:#06231f;font-weight:800;padding:12px 17px;cursor:pointer;font-size:14px}button.secondary{background:#23334a;color:#eaf2ff}.upload{display:inline-flex;align-items:center}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}.stat{background:#15243a;border:1px solid #2d4359;padding:15px;border-radius:12px}.stat strong{display:block;font-size:26px;direction:ltr;text-align:right;margin-top:8px}.stat small{color:#9bb1c9}canvas{width:100%;height:230px;display:block}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 7px;text-align:right;border-bottom:1px solid #26364b}td{direction:ltr;text-align:right}.scroll{max-height:300px;overflow:auto}.notice{border-right:3px solid #f0b968;background:#31291e;padding:12px 15px;border-radius:6px;color:#e8cba0;font-size:13px;line-height:1.9}.good{color:#51dfb9}.muted{color:#94a9c3}footer{padding:25px 0;color:#8297b3;font-size:12px}a{color:#6de0c6}#status{min-height:22px;font-size:13px}#eventsInfo{white-space:pre-wrap;line-height:1.8;color:#bfd0e7;font-size:13px} @media(max-width:800px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}header .wrap{flex-wrap:wrap}}
+
+.simple{max-width:900px;padding-top:34px}.simple h1,.simple .intro{display:none}
+.flight-card{background:linear-gradient(150deg,#11243a,#0c1728);border:1px solid #29435b;border-radius:22px;padding:22px;box-shadow:0 20px 60px #0005}
+.flight-heading{display:flex;justify-content:space-between;align-items:center;font-weight:850;font-size:19px}.flight-heading>span:first-child{color:#67e1c3;letter-spacing:1px}.live-dot{font-size:12px;color:#9bdcc9}
+.flight-visual{height:330px;margin:18px 0 8px;background:radial-gradient(ellipse at 70% 80%,#1b3950 0%,#0b1728 68%);border-radius:16px;overflow:hidden}.flight-visual svg{width:100%;height:100%}.gridline{stroke:#294057;stroke-width:1;stroke-dasharray:5 9;fill:none}.flight-path{stroke:url(#flightLine);stroke-width:6;fill:none;stroke-linecap:round;filter:drop-shadow(0 0 8px #36c9a6)}.plane{filter:drop-shadow(0 0 8px #7cf0d2)}
+.flight-readout{display:grid;grid-template-columns:1fr 1fr;gap:12px}.flight-readout>div{background:#152b40;border:1px solid #2d4b61;border-radius:13px;padding:15px}.flight-readout small{display:block;color:#9db6cc;font-size:12px;margin-bottom:8px}.flight-readout strong{font-size:16px;color:#e8f8f4}.flight-note{margin:14px 0 0;padding:12px 14px;border-right:3px solid #e5b46b;background:#2c281f;border-radius:8px;color:#e7d2a9;font-size:13px;line-height:1.8}
+.simple-actions{display:flex;gap:10px;justify-content:center;margin:18px 0}.simple-actions label{cursor:pointer}.simple-links{text-align:center;color:#8fa9c0;font-size:12px}.legacy{display:none!important}
+@media(max-width:600px){.simple{padding:16px}.flight-card{padding:14px}.flight-visual{height:240px}.flight-readout{grid-template-columns:1fr}.flight-heading{font-size:16px}}
 </style>
 </head>
 <body>
 <header><div class="wrap"><div class="brand">✦ Crash <span>Flight Pro</span></div><div class="tag">WEB EDITION · بدون تحميل</div></div></header>
-<main class="wrap">
+<main class="wrap simple">
+<section class="flight-card">
+  <div class="flight-heading"><span>CRASH FLIGHT</span><span class="live-dot">● مراقبة الجولات</span></div>
+  <div class="flight-visual" role="img" aria-label="طائرة تتحرك على خط بياني صاعد">
+    <svg viewBox="0 0 900 360" preserveAspectRatio="none" aria-hidden="true">
+      <defs><linearGradient id="flightLine" x1="0" x2="1"><stop offset="0" stop-color="#36c9a6"/><stop offset="1" stop-color="#9cf3d8"/></linearGradient></defs>
+      <path class="gridline" d="M0 300H900 M0 220H900 M0 140H900 M0 60H900"/>
+      <path class="flight-path" d="M20 300 C130 290 130 245 235 250 S360 220 430 185 S555 180 625 130 S755 115 875 35"/>
+      <g class="plane"><text x="0" y="0" font-size="48">✈️</text><animateMotion dur="9s" repeatCount="indefinite" rotate="auto"><mpath href="#motionPath"/></animateMotion></g>
+      <path id="motionPath" d="M20 300 C130 290 130 245 235 250 S360 220 430 185 S555 180 625 130 S755 115 875 35" fill="none"/>
+    </svg>
+  </div>
+  <div class="flight-readout">
+    <div><small>نمط الجولة</small><strong>متابعة مباشرة</strong></div>
+    <div><small>المؤشر المبكر</small><strong id="earlySignal">في انتظار بيانات قبل الانفجار</strong></div>
+  </div>
+  <p class="flight-note" id="simpleStatus">الطائرة تتحرك للعرض فقط. لا يوجد إنذار موثوق قبل الانفجار حتى نثبت وجود إشارة في الرسائل السابقة له.</p>
+</section>
+<div class="simple-actions">
+  <button id="simpleConnect">تحديث الاتصال</button>
+  <label class="upload" for="file">فتح ملف الجولات</label>
+</div>
+<div class="simple-links"><a href="https://github.com/AMIRSLAMA/Crash-Flight-Pro/tree/main/extension" target="_blank" rel="noopener">إضافة المتصفح</a> · <a href="https://github.com/AMIRSLAMA/Crash-Flight-Pro" target="_blank" rel="noopener">المشروع</a></div>
+<div class="legacy" aria-hidden="true">
+
 <h1>لوحة تحليل جولات Crash + تسجيل مباشر عبر إضافة المتصفح</h1>
 <p class="intro">افتحي الموقع من أي متصفح، ارفعي ملف الجولات، وشوفي توزيع النتائج والتوقيتات. التحليل يتم داخل جهازك فقط، ولا يتم رفع بياناتك إلى خادم.</p>
 <div class="notice"><strong>حقيقة مهمة:</strong> نتائج الجولات السابقة ورسائل OnCrash لا تكشف المضاعف الحقيقي للجولة القادمة. هذا الموقع لا يقدم توقعات مضمونة ولا ينفذ رهانات. ولا يمكن لموقع مستقل قراءة WebSocket داخل صفحة 1xBet بسبب عزل المتصفحات.</div>
@@ -34,6 +66,8 @@
 <section class="panel"><h2>فحص الرسائل</h2><div id="eventsInfo">الملف المطلوب لفحص الكشف المبكر لازم يحتوي على رسائل قبل OnCrash مثل OnStart أو OnStage مع توقيت الاستقبال.</div><div class="actions"><button class="secondary" id="export">تنزيل تقرير التحليل</button></div></section>
 </div>
 <footer>Crash Flight Pro · Web Edition · يعمل داخل المتصفح · <a href="https://github.com/AMIRSLAMA/Crash-Flight-Pro" target="_blank" rel="noopener">المشروع على GitHub</a></footer>
+
+</div>
 </main>
 <script>
 "use strict";
@@ -100,4 +134,21 @@ $("demo").onclick=()=>{activeSource="demo";const v=[1.24,2.61,1.01,4.22,1.89,7.1
 $("export").onclick=()=>{const v=rounds.map(x=>x.multiplier);const report={generatedAt:new Date().toISOString(),demo,roundCount:v.length,median:med(v),below2:v.filter(x=>x<2).length,maximum:v.length?Math.max(...v):null,eventCount:eventRows.length,warning:"Historical data does not reveal the next round multiplier."};const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download="crash-flight-report.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 render();
 </script>
+
+<script>
+document.getElementById("simpleConnect").addEventListener("click",()=>{
+  document.getElementById("connectLive").click();
+  document.getElementById("simpleStatus").textContent="جارٍ طلب بيانات الإضافة. ظهور رسائل OnCrash وحده لا يثبت وجود إنذار مسبق.";
+});
+window.addEventListener("message",e=>{
+  if(e.source!==window||e.origin!==location.origin||e.data?.source!=="crash-flight-extension")return;
+  if(e.data.type==="events"){
+    const events=Array.isArray(e.data.events)?e.data.events:[];
+    const pre=events.filter(x=>["OnStart","OnStage","OnBetting"].includes(x.target)).length;
+    document.getElementById("earlySignal").textContent=pre?"وصلت رسائل قبل الانفجار — قيد الفحص":"لا توجد رسائل سابقة كافية";
+    document.getElementById("simpleStatus").textContent="تم استلام "+events.length+" رسالة. الرسائل السابقة للانفجار تحتاج اختبارًا قبل اعتماد أي إنذار.";
+  }
+});
+</script>
+
 </body></html>
