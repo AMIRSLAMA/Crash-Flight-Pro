@@ -1,4 +1,4 @@
-(()=>{const CAPTURE_VERSION="0.3.1";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
+(()=>{const CAPTURE_VERSION="0.3.2";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
  const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
  const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
  const METRIC_KEY=/(multiplier|(^|[_-])mult([_-]|$)|coef|coefficient|factor|crash|elapsed|duration|time|stage|level|rate|speed|progress|round|tick|state|result|^f$|^x$)/i;
@@ -7,7 +7,7 @@
   if(Array.isArray(value)){for(const item of value.slice(0,50))extractMetrics(item,out,depth+1);return;}
   if(typeof value!=="object")return;
   for(const [key,val] of Object.entries(value).slice(0,100)){
-   if(METRIC_KEY.test(key)&&((typeof val==="number"&&Number.isFinite(val))||(typeof val==="string"&&val.length<=48))){
+   if(METRIC_KEY.test(key)&&(typeof val==="number"&&Number.isFinite(val))){
     out[key]=val;
    }else if(val&&typeof val==="object")extractMetrics(val,out,depth+1);
   }
