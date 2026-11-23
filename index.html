@@ -43,13 +43,13 @@ button:disabled{opacity:.55;cursor:wait}
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, activeRequestId=null, lastCrashAt=null, crashEventCount=0;
+let crashes=[], nextRound=null, requestPending=false, requestTimer=null, roundFinished=false, activeRequestId=null, lastCrashAt=null, crashEventCount=0, lastAutoRoundKey=null, isAutoRequest=false;
 function askForEvents(){activeRequestId=String(Date.now())+"-"+Math.random().toString(36).slice(2);window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId:activeRequestId},"*");}
 const accountInput=$("accountIdInput"), accountStatus=$("accountStatus");
 try{accountInput.value=localStorage.getItem("crashFlightAccountId")||"";}catch(_){}
 $("saveAccount").addEventListener("click",()=>{
  const value=accountInput.value.trim();
- if(value&&!/^\\d{4,20}$/.test(value)){accountStatus.textContent="اكتب رقم الحساب بالأرقام فقط.";return;}
+ if(value&&!/^\d{4,20}$/.test(value)){accountStatus.textContent="اكتب رقم الحساب بالأرقام فقط.";return;}
  try{
   if(value)localStorage.setItem("crashFlightAccountId",value);
   else localStorage.removeItem("crashFlightAccountId");
@@ -63,9 +63,9 @@ function readEvents(events){
  const validCrashes=crashEvents.filter(e=>Number.isFinite(Number(e.f))&&Number(e.f)>=1&&Number(e.f)<=100000);
  crashes=validCrashes.map(e=>Number(e.f)).slice(-200);
  lastCrashAt=validCrashes.length?validCrashes[validCrashes.length-1].receivedAt:null;
- const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
- const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
- nextRound=betting?.roundId??stage?.roundId??null;
+ const starts=events.filter(e=>e&&(["OnBetting","OnStage","OnStart"].includes(e.target))&&e.roundId!==undefined&&e.roundId!==null);
+ const latestStart=starts.reduce((best,e)=>!best||Number(e.receivedAt||0)>=Number(best.receivedAt||0)?e:best,null);
+ nextRound=latestStart?.roundId??null;
  if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
 }function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
@@ -100,21 +100,30 @@ window.addEventListener("message",e=>{
   const lastRoundStart=[...allEvents].reverse().find(ev=>ev&&(["OnStage","OnBetting","OnStart"].indexOf(ev.target)>=0));
   roundFinished=!!lastCrash&&(!lastRoundStart||Number(lastCrash.receivedAt)>Number(lastRoundStart.receivedAt));
   $("predict").hidden=false;
+  const latestStart=[...allEvents].reverse().find(ev=>ev&&(["OnBetting","OnStage","OnStart"].includes(ev.target))&&ev.roundId!==undefined&&ev.roundId!==null);
+  const roundKey=latestStart?String(latestStart.roundId):null;
+  if(roundKey&&roundKey!==lastAutoRoundKey){
+   lastAutoRoundKey=roundKey;
+   const ok=calculate();
+   $("status").textContent=ok?"توقع تلقائي للجولة #"+roundKey+" — تم تحديثه مع بداية الجولة.":"بدأت الجولة #"+roundKey+" لكن البيانات غير كافية لحساب التوقع.";
+  }
   if(requestPending){
-   requestPending=false;clearTimeout(requestTimer);
+   const wasAuto=isAutoRequest;
+   requestPending=false;isAutoRequest=false;clearTimeout(requestTimer);
    $("predict").disabled=false;
-   try{
-    const ok=calculate();
-    const stamp=lastCrashAt?new Date(lastCrashAt).toLocaleTimeString("ar-EG"):"لا توجد نتيجة انفجار صالحة";
-    $("status").textContent=ok?"تم تحديث السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار. آخر نتيجة: "+stamp:"السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار؛ "+(lastCrashAt?"آخر نتيجة "+stamp:"لم تُلتقط قيمة انفجار صالحة")+". راجع اتصال الإضافة.";
-   }catch(err){
-    $("forecast").textContent="تعذر الحساب";
-    $("meta").textContent="حدث خطأ أثناء التحليل؛ لم يتم تغيير سجل النتائج.";
-    $("status").textContent="حصل خطأ في المعادلة. الزر متاح لإعادة المحاولة.";
-    console.error("Crash Flight calculation error:",err);
-   }finally{
-    $("predict").disabled=false;
+   if(!wasAuto){
+    try{
+     const ok=calculate();
+     const stamp=lastCrashAt?new Date(lastCrashAt).toLocaleTimeString("ar-EG"):"لا توجد نتيجة انفجار صالحة";
+     $("status").textContent=ok?"تحديث يدوي: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار. آخر نتيجة: "+stamp:"السجل: "+crashes.length+" نتيجة صالحة من "+crashEventCount+" رسالة انفجار؛ "+(lastCrashAt?"آخر نتيجة "+stamp:"لم تُلتقط قيمة انفجار صالحة")+". راجع اتصال الإضافة.";
+    }catch(err){
+     $("forecast").textContent="تعذر الحساب";
+     $("meta").textContent="حدث خطأ أثناء التحليل؛ لم يتم تغيير سجل النتائج.";
+     $("status").textContent="حصل خطأ أثناء الحساب. الزر متاح لإعادة المحاولة.";
+     console.error("Crash Flight calculation error:",err);
+    }
    }
+   $("predict").disabled=false;
   }
  }
  if(e.data.type==="unavailable"&&(!activeRequestId||e.data.requestId===activeRequestId)){
@@ -122,19 +131,22 @@ window.addEventListener("message",e=>{
   $("status").textContent="الإضافة غير متصلة؛ افتح اللعبة وفعّل الإضافة.";
  }
 });
-$("predict").addEventListener("click",()=>{
+function requestEvents(automatic=false){
  if(requestPending)return;
- $("predict").disabled=true;$("status").textContent="جارٍ جلب النتائج بطلبك...";
- requestPending=true;
+ requestPending=true;isAutoRequest=automatic;
+ if(!automatic){$("predict").disabled=true;$("status").textContent="جارٍ تحديث بيانات اللعبة...";}
  try{askForEvents();}catch(err){
-  requestPending=false;$("predict").disabled=false;
-  $("status").textContent="تعذر الاتصال بالإضافة؛ الزر جاهز لإعادة المحاولة.";
-  console.error("Crash Flight extension request error:",err);
-  return;
+  requestPending=false;isAutoRequest=false;$("predict").disabled=false;
+  $("status").textContent="تعذر الاتصال بالإضافة؛ تحقق من تشغيلها.";
+  console.error("Crash Flight extension request error:",err);return;
  }
  requestTimer=window.setTimeout(()=>{
-  if(requestPending){requestPending=false;activeRequestId=null;$("predict").disabled=false;$("status").textContent="لم يصل رد الإضافة خلال 10 ثوانٍ. أعد تحميل صفحة البرنامج واللعبة، ثم جرّب مرة أخرى.";}
- },10000);
-});
+  if(requestPending){requestPending=false;isAutoRequest=false;activeRequestId=null;$("predict").disabled=false;if(!automatic)$("status").textContent="لم يصل رد الإضافة خلال 8 ثوانٍ. تحقق من صفحة اللعبة والإضافة.";}
+ },8000);
+}
+$("predict").addEventListener("click",()=>requestEvents(false));
+$("predict").textContent="تحديث التوقع الآن";
+$("status").textContent="التحديث التلقائي ينتظر بداية الجولة...";
+window.setInterval(()=>{if(!requestPending)requestEvents(true);},1200);
 </script>
 </body></html>
