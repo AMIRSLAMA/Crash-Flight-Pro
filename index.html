@@ -16,7 +16,8 @@ header{height:66px;display:flex;align-items:center;gap:13px;padding:0 20px;borde
 .plane{will-change:left,top}
 .multiplier{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:clamp(48px,9vw,76px);font-weight:900;direction:ltr;text-shadow:0 4px 18px #000}.multiplier small{font-size:.45em;color:#18e66b}
 .signal{border:2px solid #e83d42;border-radius:16px;background:linear-gradient(160deg,#210c13,#100b13);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;min-height:260px}
-.alert-icon{font-size:49px;color:#ff4148;line-height:1}.signal h2{font-size:25px;margin:12px 0 5px}.signal p{margin:0;color:#f7c84b;font-size:16px;line-height:1.6;white-space:pre-line}.signal .sub{margin-top:12px;color:#aeb9c9;font-size:12px}\n.forecast{margin:0 16px 14px;padding:13px 15px;border:1px solid #34465f;border-radius:14px;background:linear-gradient(110deg,#14253a,#0d1726);display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.forecast label{display:block;color:#aab9cc;font-size:12px;margin-bottom:5px}.forecast strong{font-size:23px;color:#f6c45b;direction:ltr;display:inline-block}.forecast small{display:block;color:#9aabc0;font-size:11px;line-height:1.5;margin-top:5px}.forecast .round{font-size:13px;color:#dce7f5;text-align:left}.forecast .round b{display:block;font-size:18px;color:#fff;margin-top:4px}
+.alert-icon{font-size:49px;color:#ff4148;line-height:1}.signal h2{font-size:25px;margin:12px 0 5px}.signal p{margin:0;color:#f7c84b;font-size:16px;line-height:1.6;white-space:pre-line}.signal .sub{margin-top:12px;color:#aeb9c9;font-size:12px}
+.forecast{margin:0 16px 14px;padding:13px 15px;border:1px solid #34465f;border-radius:14px;background:linear-gradient(110deg,#14253a,#0d1726);display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.forecast label{display:block;color:#aab9cc;font-size:12px;margin-bottom:5px}.forecast strong{font-size:23px;color:#f6c45b;direction:ltr;display:inline-block}.forecast small{display:block;color:#9aabc0;font-size:11px;line-height:1.5;margin-top:5px}.forecast .round{font-size:13px;color:#dce7f5;text-align:left}.forecast .round b{display:block;font-size:18px;color:#fff;margin-top:4px}
 .bottom{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:12px;padding:0 16px 16px}
 .info{background:#111d2d;border:1px solid #293c54;border-radius:12px;padding:10px 12px;min-height:60px}.info label{display:block;color:#a7b5c8;font-size:11px;margin-bottom:5px}.info strong{font-size:15px}.green{color:#22e66b}
 button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(#13d64e,#079b37);color:white;box-shadow:0 5px 18px #00c94c33}button.secondary{background:#24364d;color:#eaf1fa;box-shadow:none;border:1px solid #3c526e}button:disabled{opacity:.45;cursor:not-allowed}
@@ -118,7 +119,8 @@ function showRisk(current){
 }
 function handleEvents(events){
  if(!Array.isArray(events))return;
- observedCrashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000);\n updateNextRoundForecast();
+ observedCrashes=events.filter(e=>e&&e.target==="OnCrash"&&Number.isFinite(Number(e.f))).map(e=>Number(e.f)).filter(n=>n>=1&&n<=100000);
+ updateNextRoundForecast();
  for(const e of events){
   if(!e||!e.target)continue;
   const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
