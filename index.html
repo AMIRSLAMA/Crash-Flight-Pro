@@ -48,7 +48,15 @@ function readEvents(events){
  if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
 }function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
- if(crashes.length<20){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 20 نتيجة على الأقل لتقييم النماذج بشكل أفضل.";return false;}
+ if(crashes.length<3){$("forecast").textContent="—";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 3 نتائج على الأقل لإظهار تقدير تجريبي.";return false;}
+ if(crashes.length<16){
+  const recent=crashes.slice(-Math.min(10,crashes.length)).slice().sort((a,b)=>a-b);
+  const mid=Math.floor(recent.length/2);
+  const estimate=recent.length%2?recent[mid]:(recent[mid-1]+recent[mid])/2;
+  $("forecast").textContent=estimate.toFixed(2)+"x";
+  $("meta").textContent="تقدير تجريبي مبني على وسيط آخر "+recent.length+" نتائج فقط. البيانات قليلة؛ ليس توقعًا موثوقًا ولا معرفة مسبقة بنتيجة الجولة.";
+  return true;
+ }
  // Model tournament: compare rolling weighted-quantile models and
  // regime-transition models on historical rounds not used to make each forecast.
  const sample=crashes.slice(-200);
