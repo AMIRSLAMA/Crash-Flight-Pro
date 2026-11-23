@@ -23,8 +23,6 @@ button:disabled{opacity:.55;cursor:wait}
  <section style="width:100%">
   <div class="label">رقم الجولة القادمة</div>
   <div class="round" id="nextRound">—</div>
-  <div class="label">رقم الحساب</div>
-  <div class="round" id="accountId" style="font-size:18px">غير متاح بعد</div>
  </section>
  <div class="divider"></div>
  <section style="width:100%">
@@ -47,8 +45,6 @@ function readEvents(events){
  const betting=[...events].reverse().find(e=>e&&e.target==="OnBetting"&&e.roundId!==undefined&&e.roundId!==null);
  const stage=[...events].reverse().find(e=>e&&e.target==="OnStage"&&e.roundId!==undefined&&e.roundId!==null);
  nextRound=betting?.roundId??stage?.roundId??null;
- const accountEvent=[...events].reverse().find(e=>e&&typeof e.accountId==="string"&&e.accountId.length>0);
- $("accountId").textContent=accountEvent?accountEvent.accountId:"لم يُرصد في بيانات اللعبة";
  if(nextRound!==null)$("nextRound").textContent="#"+nextRound;
 }function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
