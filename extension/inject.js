@@ -45,7 +45,15 @@
      });
     }
     for(const key of ["l","ln","ts"]){const val=payload[key]??m[key];if(typeof val==="number"&&Number.isFinite(val))event[key]=val;else if(key==="l"&&typeof val==="string"&&val.length<60)event[key]=val;}
-    if(target==="OnCrash"){const f=payload.f??m.f;if(typeof f==="number"&&Number.isFinite(f))event.f=f;else if(typeof args[0]==="number"&&Number.isFinite(args[0]))event.f=args[0];}
+    if(target==="OnCrash"){
+     const direct=payload.f??payload.multiplier??payload.mult??payload.coef??payload.coefficient??payload.factor??m.f;
+     if(typeof direct==="number"&&Number.isFinite(direct))event.f=direct;
+     else if(typeof args[0]==="number"&&Number.isFinite(args[0]))event.f=args[0];
+     else {
+      const keys=["f","multiplier","mult","coef","coefficient","factor","crash"];
+      for(const key of keys){const value=metrics[key];if(typeof value==="number"&&Number.isFinite(value)){event.f=value;break;}}
+     }
+    }
     window.postMessage({source:"crash-flight-pro-capture",event},"*");
    }
   }
