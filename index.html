@@ -148,8 +148,8 @@ $("predict").addEventListener("click",()=>{
   return;
  }
  requestTimer=window.setTimeout(()=>{
-  if(requestPending){requestPending=false;$("predict").disabled=false;$("status").textContent="لم يصل رد من الإضافة. تأكد أنها متصلة ثم حاول مجددًا.";}
- },2500);
+  if(requestPending){requestPending=false;activeRequestId=null;$("predict").disabled=false;$("status").textContent="لم يصل رد الإضافة خلال 10 ثوانٍ. أعد تحميل صفحة البرنامج واللعبة، ثم جرّب مرة أخرى.";}
+ },10000);
 });
 </script>
 </body></html>
