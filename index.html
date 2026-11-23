@@ -57,14 +57,54 @@ button{border:0;border-radius:12px;padding:13px 17px;font-weight:800;font-size:1
 <div class="history" id="history" hidden></div>
 <div class="foot">واجهة تجريبية صغيرة · تسجيل النتائج يدويًا حاليًا · لا تدّعي معرفة نتيجة الجولة القادمة</div>
 </section>
+<script src="./extension/app-bridge.js"></script>
 <script>
 "use strict";
-const $=id=>document.getElementById(id),KEY="sky-predictor-results-v1";let active=false,round=0,results=[];
-try{results=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(results))results=[]}catch{results=[]}
-function showHistory(){$("history").hidden=false;$("history").innerHTML=results.length?results.slice(-12).reverse().map((v,i)=>'<span>#'+(results.length-i)+' <b>'+Number(v).toFixed(2)+'x</b></span>').join("　·　"):"لا توجد نتائج محفوظة";}
-$("start").addEventListener("click",()=>{if(active)return;active=true;round++;$("roundNumber").textContent="#"+round;$("connection").textContent="تسجيل يدوي";$("flight").classList.add("active");$("signalTitle").textContent="الجولة قيد التسجيل";$("signalText").innerHTML="الطيارة تتحرك<br>بانتظار النتيجة النهائية";$("multiplierDisplay").innerHTML="LIVE<small> ·</small>";$("start").disabled=true;});
-$("save").addEventListener("click",()=>{const n=Number($("result").value);if(!active||!Number.isFinite(n)||n<1){$("signalTitle").textContent="أدخل نتيجة الجولة";$("signalText").textContent="ابدأ التسجيل ثم احفظ المضاعف بعد انتهائها";return;}results.push(n);localStorage.setItem(KEY,JSON.stringify(results));active=false;$("flight").classList.remove("active");$("start").disabled=false;$("connection").textContent="تم الحفظ";$("multiplierDisplay").innerHTML=n.toFixed(2)+'<small>x</small>';$("signalTitle").textContent="انتهت الجولة";$("signalText").textContent="تم حفظ النتيجة — لا توجد إشارة للجولة القادمة";$("result").value="";});
-$("historyToggle").addEventListener("click",showHistory);
-$("export").addEventListener("click",()=>{if(!results.length){$("signalText").textContent="لا توجد نتائج للتصدير";return;}const blob=new Blob(["multiplier\n"+results.join("\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sky-predictor-results.csv";a.click();URL.revokeObjectURL(a.href);});
+const $=id=>document.getElementById(id);
+let active=false,round=0,results=[],lastSeen=0,lastEventAt=0,lastEventKey="";
+const seen=new Set();
+function setSignal(title,html){$("signalTitle").textContent=title;$("signalText").innerHTML=html;}
+function drawFlight(on){$("flight").classList.toggle("active",on);}
+function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}
+function handleEvents(events){
+ if(!Array.isArray(events))return;
+ for(const e of events){
+  if(!e||!e.target)continue;
+  const key=[e.receivedAt,e.target,e.roundId,e.f].join(":");
+  if(seen.has(key))continue;seen.add(key);lastEventAt=Math.max(lastEventAt,Number(e.receivedAt)||0);
+  if(e.target==="OnStart"){
+   active=true;round++;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"#"+round;
+   $("connection").textContent="بيانات حية";$("connection").className="green";
+   $("multiplierDisplay").innerHTML="LIVE<small> ·</small>";drawFlight(true);
+   setSignal("الجولة بدأت","تم التقاط بداية الجولة من اللعبة مباشرة");
+  }else if(e.target==="OnCrash"){
+   active=false;drawFlight(false);
+   const mult=Number(e.f);
+   if(Number.isFinite(mult)&&mult>=1){$("multiplierDisplay").innerHTML=mult.toFixed(2)+'<small>x</small>';results.push(mult);$("history").hidden=false;$("history").textContent="آخر نتيجة مرصودة: "+mult.toFixed(2)+"x";}
+   $("connection").textContent="وصل حدث نهاية الجولة";$("connection").className="";
+   setSignal("انتهت الجولة","تم التقاط رسالة نهاية الجولة. هذا حدث بعد الانفجار وليس إنذارًا مسبقًا.");
+  }else if(e.target==="OnBetting"&&!active){$("connection").textContent="استقبال أحداث اللعبة";setSignal("مرحلة الرهان","تم رصد مرحلة ما قبل بدء الجولة؛ لا تعني معرفة نتيجة الانفجار.");}
+ }
+}
+function requestEvents(){
+ const requestId=String(Date.now())+Math.random().toString(16).slice(2);
+ window.postMessage({source:"crash-flight-dashboard",type:"get-events",requestId},"*");
+}
+window.addEventListener("message",e=>{
+ if(e.source!==window||e.data?.source!=="crash-flight-extension")return;
+ if(e.data.type==="unavailable"){$("connection").textContent="الإضافة غير متصلة";$("connection").className="";return;}
+ if(e.data.type==="events"){
+  const list=e.data.events||[];
+  if(list.length){lastSeen=list.length;handleEvents(list);const age=Date.now()-lastEventAt;
+   if(age<12000){$("connection").textContent="متصل · "+list.length+" حدث";$("connection").className="green";}
+   else {$("connection").textContent="لا توجد أحداث حديثة";$("connection").className="";}
+  }else{$("connection").textContent="في انتظار أحداث اللعبة";$("connection").className="";}
+ }
+});
+$("start").addEventListener("click",()=>{setSignal("التسجيل اليدوي غير مطلوب","اللوحة تنتظر أحداث اللعبة من الإضافة. افتح اللعبة مع تفعيل الالتقاط ثم أعد تحميل صفحة اللوحة.");requestEvents();});
+$("save").addEventListener("click",()=>{setSignal("التسجيل تلقائي","تُعرض نتيجة الجولة عند وصول حدث OnCrash من اللعبة. لا تدخل رقمًا يدويًا هنا.");});
+$("historyToggle").addEventListener("click",()=>{const h=$("history");h.hidden=!h.hidden;});
+$("export").addEventListener("click",()=>{if(!results.length){setSignal("لا توجد نتائج مرصودة","سيظهر السجل بعد التقاط جولات فعلية.");return;}const blob=new Blob(["multiplier\n"+results.map(n=>n.toFixed(2)).join("\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sky-predictor-results.csv";a.click();URL.revokeObjectURL(a.href);});
+requestEvents();setInterval(requestEvents,1500);
 </script>
 </body></html>
