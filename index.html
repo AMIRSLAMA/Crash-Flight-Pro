@@ -50,20 +50,24 @@ function readEvents(events){
 function calculate(){
  if(nextRound===null){$("forecast").textContent="—";$("meta").textContent="لم يصل رقم الجولة من الإضافة بعد. افتح اللعبة ثم حاول مرة أخرى.";return false;}
  if(crashes.length<10){$("forecast").textContent="بيانات غير كافية";$("meta").textContent="تم التقاط "+crashes.length+" نتيجة فقط؛ نحتاج 10 نتائج مكتملة على الأقل.";return false;}
- // Weighted geometric estimate: recent results receive more weight, while high multipliers
- // remain represented through the logarithmic mean instead of being discarded as outliers.
- const sample=crashes.slice(-30);
- let weightedLog=0,totalWeight=0;
- sample.forEach((value,index)=>{
-  const weight=1+(index/(sample.length-1))*1.5;
-  weightedLog+=Math.log(value)*weight;
-  totalWeight+=weight;
- });
- const estimate=Math.exp(weightedLog/totalWeight);
- $("forecast").textContent=estimate.toFixed(2)+"x";
- const sorted=[...sample].sort((a,b)=>a-b);
+ // Pick one observed multiplier from the recent empirical distribution instead of
+ // averaging all values (which can be pulled far from any actual round by outliers).
+ const sample=crashes.slice(-20);
  const highCount=sample.filter(n=>n>=5).length;
- $("meta").textContent="حساب موزون لآخر "+sample.length+" جولة، مع احتساب النتائج المرتفعة ("+highCount+" نتائج 5x فأكثر). الرقم تقديري فقط.";
+ const targetQuantile=0.50+Math.min(0.12,(highCount/sample.length)*0.20);
+ const ordered=sample.map((value,index)=>({
+  value,
+  weight:1+(index/(sample.length-1))*1.25
+ })).sort((a,b)=>a.value-b.value);
+ const totalWeight=ordered.reduce((sum,item)=>sum+item.weight,0);
+ const threshold=totalWeight*targetQuantile;
+ let cumulative=0, estimate=ordered[ordered.length-1].value;
+ for(const item of ordered){
+  cumulative+=item.weight;
+  if(cumulative>=threshold){estimate=item.value;break;}
+ }
+ $("forecast").textContent=estimate.toFixed(2)+"x";
+ $("meta").textContent="اختير رقم موجود فعليًا من آخر "+sample.length+" جولة؛ روعي تكرار النتائج 5x فأكثر ("+highCount+") دون أن يرفع المتوسط القفزات الكبيرة. تقدير تجريبي وليس تنبؤًا مضمونًا.";
  return true;
 }
 window.addEventListener("message",e=>{
