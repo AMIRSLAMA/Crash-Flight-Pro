@@ -1,6 +1,4 @@
 import csv
-import hashlib
-import hmac
 import sys
 from pathlib import Path
 
@@ -8,12 +6,11 @@ from PySide6.QtCore import QStandardPaths, QUrl
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QHBoxLayout, QLabel, QLineEdit,
     QMainWindow, QMessageBox, QPushButton, QTextEdit, QVBoxLayout,
-    QCheckBox,
-    QWidget, QSplitter,
+    QCheckBox, QWidget, QSplitter,
 )
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
-from analysis_engine import read_csv, summary, walk_forward, validate
+from analysis_engine import read_csv, summary, walk_forward
 from capture_bridge import CapturePage
 from event_report import build_report
 from round_store import RoundStore
@@ -25,7 +22,7 @@ from pre_crash_audit import PreCrashAudit
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Crash Flight Pro — Historical Analyzer")
+        self.setWindowTitle("Crash Flight Pro")
         self.resize(1350, 820)
         directory = QStandardPaths.writableLocation(
             QStandardPaths.StandardLocation.AppDataLocation
@@ -40,9 +37,9 @@ class Window(QMainWindow):
         layout = QVBoxLayout(root)
         toolbar = QHBoxLayout()
         self.address = QLineEdit()
-        self.address.setPlaceholderText("Enter a full https:// website address")
+        self.address.setPlaceholderText("أدخل رابط اللعبة")
         self.address.returnPressed.connect(self.open_url)
-        open_button = QPushButton("Open website")
+        open_button = QPushButton("فتح اللعبة")
         open_button.clicked.connect(self.open_url)
         toolbar.addWidget(self.address)
         toolbar.addWidget(open_button)
@@ -50,7 +47,11 @@ class Window(QMainWindow):
 
         splitter = QSplitter()
         self.browser = QWebEngineView()
-        self.capture_page = CapturePage(self.browser.page().profile(), path / "captured_events.jsonl", self.browser)
+        self.capture_page = CapturePage(
+            self.browser.page().profile(),
+            path / "captured_events.jsonl",
+            self.browser,
+        )
         self.capture_page.install_capture()
         self.capture_page.on_event = self.capture_event
         self.browser.setPage(self.capture_page)
@@ -61,52 +62,44 @@ class Window(QMainWindow):
 
         sidebar = QWidget()
         side = QVBoxLayout(sidebar)
-        side.addWidget(QLabel("Historical analysis — next round unknown"))
-        self.capture_toggle = QCheckBox("Capture sanitized game events (experimental)")
+        side.addWidget(QLabel("متابعة الجولة"))
+        self.capture_toggle = QCheckBox("تشغيل متابعة أحداث اللعبة")
         self.capture_toggle.toggled.connect(self.toggle_capture)
         side.addWidget(self.capture_toggle)
-        self.capture_status = QLabel("Capture OFF. Enable and reload game to observe events.")
+        self.capture_status = QLabel("المتابعة متوقفة")
         self.capture_status.setWordWrap(True)
         side.addWidget(self.capture_status)
-        self.live_status = QLabel("Completed live rounds: 0")
-        side.addWidget(self.live_status)
-        self.upcoming_status = QLabel(self.upcoming.display)
+
+        self.upcoming_status = QLabel("رقم الجولة القادمة: بانتظار بيانات اللعبة")
         self.upcoming_status.setWordWrap(True)
         side.addWidget(self.upcoming_status)
-        self.fairness_seen = set()
-        self.fairness_status = QLabel("Fairness fields: NOT OBSERVED (known names only)")
-        self.fairness_status.setWordWrap(True)
-        side.addWidget(self.fairness_status)
-        self.demo_nonce = 0
-        self.demo_round_ids = set()
-        self.demo_status = QLabel('Calculated Crash (DEMO): waiting for OnStart')
-        self.demo_status.setWordWrap(True)
-        side.addWidget(self.demo_status)
-        self.audit_status = QLabel(self.pre_crash_audit.latest)
+
+        self.audit_status = QLabel("التنبيه المبكر: لا توجد إشارة موثوقة حتى الآن")
         self.audit_status.setWordWrap(True)
         side.addWidget(self.audit_status)
-        report_button = QPushButton("Export sanitized timing report")
+
+        report_button = QPushButton("تصدير تقرير الفحص")
         report_button.clicked.connect(self.export_event_report)
         side.addWidget(report_button)
 
-        load_button = QPushButton("Import CSV")
+        load_button = QPushButton("استيراد سجل سابق CSV")
         load_button.clicked.connect(self.load_csv)
         side.addWidget(load_button)
 
         manual = QHBoxLayout()
         self.multiplier = QLineEdit()
-        self.multiplier.setPlaceholderText("Completed multiplier, e.g. 2.35")
+        self.multiplier.setPlaceholderText("مضاعف جولة انتهت")
         self.multiplier.returnPressed.connect(self.add_round)
-        add_button = QPushButton("Add round")
+        add_button = QPushButton("إضافة")
         add_button.clicked.connect(self.add_round)
         manual.addWidget(self.multiplier)
         manual.addWidget(add_button)
         side.addLayout(manual)
 
-        export_button = QPushButton("Export CSV")
+        export_button = QPushButton("تصدير CSV")
         export_button.clicked.connect(self.export_csv)
         side.addWidget(export_button)
-        clear_button = QPushButton("Clear saved rounds")
+        clear_button = QPushButton("مسح السجل المحفوظ")
         clear_button.clicked.connect(self.clear_rounds)
         side.addWidget(clear_button)
 
@@ -114,7 +107,7 @@ class Window(QMainWindow):
         self.report.setReadOnly(True)
         side.addWidget(self.report)
         splitter.addWidget(sidebar)
-        splitter.setSizes([950, 400])
+        splitter.setSizes([1000, 350])
         layout.addWidget(splitter)
         self.setCentralWidget(root)
         self.update_report()
@@ -122,29 +115,13 @@ class Window(QMainWindow):
     def toggle_capture(self, enabled):
         self.capture_page.capture_enabled = enabled
         self.capture_status.setText(
-            "Capture ON. Reload the game page to activate the observer."
-            if enabled else "Capture OFF. No new events will be saved."
+            "المتابعة تعمل؛ أعد تحميل صفحة اللعبة لتفعيل الالتقاط."
+            if enabled else "المتابعة متوقفة."
         )
         if enabled and not self.browser.url().isEmpty():
             self.browser.reload()
 
     def capture_event(self, record):
-        if record.get('target') == 'OnStart':
-            round_id = record.get('l')
-            if round_id is not None and round_id not in self.demo_round_ids:
-                self.demo_round_ids.add(round_id)
-                self.demo_nonce += 1
-                message = f'test:{self.demo_nonce}'.encode('utf-8')
-                digest = hmac.new(b'demo', message, hashlib.sha256).digest()
-                fraction = int.from_bytes(digest[:8], 'big') / (1 << 64)
-                demo_value = max(1.0, min(10000.0, 0.99 / max(1e-12, 1.0 - fraction)))
-                self.demo_status.setText(
-                    f'Calculated Crash (DEMO): {demo_value:.2f}x | Round {round_id} | Nonce {self.demo_nonce} '
-                    '(not a real game prediction)'
-                )
-        self.fairness_seen.update(record.get("fairness_fields", []))
-        if self.fairness_seen:
-            self.fairness_status.setText("Fairness field names seen: " + ", ".join(sorted(self.fairness_seen)) + " (values NOT captured)")
         self.upcoming.observe(record)
         self.pre_crash_audit.observe(record)
         self.audit_status.setText(self.pre_crash_audit.latest)
@@ -152,17 +129,17 @@ class Window(QMainWindow):
         if self.live_store.add_event(record):
             self.update_report()
         self.capture_status.setText(
-            f"Captured {self.capture_page.events_seen} sanitized events. "
-            f"Latest: {record['target']} round {record.get('l', '?')}"
+            f"تم رصد {self.capture_page.events_seen} حدثًا؛ "
+            f"آخر حدث: {record['target']}."
         )
 
     def export_event_report(self):
         source = self.capture_page.store_path
         if not source.exists():
-            QMessageBox.information(self, "No events", "No events captured yet.")
+            QMessageBox.information(self, "لا توجد بيانات", "لم يتم التقاط أحداث بعد.")
             return
         destination, _ = QFileDialog.getSaveFileName(
-            self, "Save sanitized report", "event_report.json", "JSON files (*.json)"
+            self, "حفظ تقرير الفحص", "event_report.json", "JSON files (*.json)"
         )
         if not destination:
             return
@@ -173,31 +150,29 @@ class Window(QMainWindow):
                 json.dumps(report, indent=2), encoding="utf-8"
             )
             QMessageBox.information(
-                self, "Report ready",
-                "Report saved locally. Review its contents before sharing."
+                self, "تم", "تم حفظ التقرير محليًا. راجع محتواه قبل مشاركته."
             )
         except (OSError, ValueError, TypeError) as exc:
-            QMessageBox.warning(self, "Report failed", str(exc))
+            QMessageBox.warning(self, "تعذر إنشاء التقرير", str(exc))
 
     def open_url(self):
         parsed = QUrl(self.address.text().strip())
         if parsed.scheme() not in ("https", "http") or not parsed.host():
-            QMessageBox.warning(self, "Invalid URL", "Enter a full http(s) URL.")
+            QMessageBox.warning(self, "رابط غير صحيح", "أدخل رابطًا يبدأ بـ http أو https.")
             return
         self.browser.setUrl(parsed)
 
     def load_csv(self):
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Import historical rounds", "", "CSV files (*.csv)"
+            self, "استيراد الجولات السابقة", "", "CSV files (*.csv)"
         )
         if not filename:
             return
         try:
-            values = read_csv(filename)
-            self.store.import_values(values)
+            self.store.import_values(read_csv(filename))
             self.update_report()
         except (ValueError, OSError, UnicodeError, KeyError) as exc:
-            QMessageBox.warning(self, "Import failed", str(exc))
+            QMessageBox.warning(self, "تعذر الاستيراد", str(exc))
 
     def add_round(self):
         try:
@@ -205,61 +180,60 @@ class Window(QMainWindow):
             self.multiplier.clear()
             self.update_report()
         except (ValueError, OSError) as exc:
-            QMessageBox.warning(self, "Invalid multiplier", str(exc))
+            QMessageBox.warning(self, "مضاعف غير صحيح", str(exc))
 
     def export_csv(self):
         filename, _ = QFileDialog.getSaveFileName(
-            self, "Export historical rounds", "rounds.csv", "CSV files (*.csv)"
+            self, "تصدير الجولات", "rounds.csv", "CSV files (*.csv)"
         )
         if not filename:
             return
         try:
-            with Path(filename).open("w", encoding="utf-8", newline="") as f:
-                writer = csv.writer(f)
+            import csv
+            with Path(filename).open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.writer(stream)
                 writer.writerow(["multiplier"])
-                for value in self.store.rounds:
-                    writer.writerow([value])
+                writer.writerows([[value] for value in self.store.rounds])
         except OSError as exc:
-            QMessageBox.warning(self, "Export failed", str(exc))
+            QMessageBox.warning(self, "تعذر التصدير", str(exc))
 
     def clear_rounds(self):
         answer = QMessageBox.question(
-            self, "Confirm", "Delete all locally saved historical rounds?"
+            self, "تأكيد", "هل تريد حذف كل الجولات المحفوظة محليًا؟"
         )
         if answer == QMessageBox.StandardButton.Yes:
             self.store.clear()
             self.update_report()
 
     def update_report(self):
-        self.live_status.setText(f"Completed live rounds: {self.live_store.count} (deduplicated)")
         combined = self.store.rounds + self.live_store.values
         stats = summary(combined)
         if stats is None:
             self.report.setPlainText(
-                "No historical rounds yet. Import CSV or enable capture to collect completed rounds.\n"
-                "Next round: UNKNOWN"
+                "لا توجد جولات محفوظة بعد.\n"
+                "المضاعف القادم غير معروف؛ لا يتم توليد أرقام تجريبية على أنها توقع."
             )
             return
         evaluation = walk_forward(combined)
         lines = [
-            f"Rounds: {stats['count']} (manual/imported {len(self.store.rounds)}, live {self.live_store.count})",
-            f"Historical median: {stats['median']:.2f}x",
-            f"Last 30 median: {stats['recent_median']:.2f}x",
-            f"Below 2x (observed): {stats['below_2']:.1%}",
-            f"At or above 2x (observed): {stats['at_least_2']:.1%}",
-            f"Observed range: {stats['minimum']:.2f}x – {stats['maximum']:.2f}x",
+            f"عدد الجولات: {stats['count']}",
+            f"الوسيط التاريخي: {stats['median']:.2f}x",
+            f"وسيط آخر 30 جولة: {stats['recent_median']:.2f}x",
+            f"أقل من 2x: {stats['below_2']:.1%}",
+            f"2x أو أكثر: {stats['at_least_2']:.1%}",
+            f"النطاق المسجل: {stats['minimum']:.2f}x – {stats['maximum']:.2f}x",
         ]
         if evaluation:
             lines.extend([
                 "",
-                f"Walk-forward rounds: {evaluation['evaluated']}",
-                f"Rolling median MAE: {evaluation['rolling_mae']:.3f}x",
-                f"Constant baseline MAE: {evaluation['baseline_mae']:.3f}x",
+                f"اختبارات لاحقة: {evaluation['evaluated']}",
+                f"خطأ الوسيط المتحرك: {evaluation['rolling_mae']:.3f}x",
+                f"خطأ خط الأساس: {evaluation['baseline_mae']:.3f}x",
             ])
         lines.extend([
-            "", "Next round: UNKNOWN",
-            "Past rounds do not reveal independent random future results.",
-            "No automated bets, page scraping, or hidden result extraction.",
+            "",
+            "نتيجة الجولة القادمة: غير معروفة قبل ظهور دليل مباشر.",
+            "لا يتم إنشاء مضاعف تجريبي أو عرضه كتنبؤ.",
         ])
         self.report.setPlainText("\n".join(lines))
 
@@ -269,7 +243,7 @@ if __name__ == "__main__":
     try:
         window = Window()
     except (ValueError, OSError) as exc:
-        QMessageBox.critical(None, "Local data error", str(exc))
+        QMessageBox.critical(None, "خطأ في البيانات المحلية", str(exc))
         sys.exit(1)
     window.show()
     sys.exit(app.exec())
