@@ -1,4 +1,4 @@
-(()=>{if(window.__crashFlightCaptureInstalled)return;window.__crashFlightCaptureInstalled=true;
+(()=>{const CAPTURE_VERSION="0.3.1";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
  const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
  const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
  const METRIC_KEY=/(multiplier|(^|[_-])mult([_-]|$)|coef|coefficient|factor|crash|elapsed|duration|time|stage|level|rate|speed|progress|round|tick|state|result|^f$|^x$)/i;
@@ -33,7 +33,7 @@
     const args=Array.isArray(m.arguments)?m.arguments:[];
     const metrics={};extractMetrics(args,metrics);extractMetrics(m,metrics);
     const shape=[];describeShape(args,shape);
-    const event={target,argCount:args.length,metrics,shape};
+    const event={target,argCount:args.length,metrics,shape,captureVersion:CAPTURE_VERSION};
     const payload=args.find(a=>a&&typeof a==="object")||{};
     for(const key of ["l","ln","ts"]){const val=payload[key]??m[key];if(typeof val==="number"&&Number.isFinite(val))event[key]=val;else if(key==="l"&&typeof val==="string"&&val.length<60)event[key]=val;}
     if(target==="OnCrash"){const f=payload.f??m.f;if(typeof f==="number"&&Number.isFinite(f))event.f=f;else if(typeof args[0]==="number"&&Number.isFinite(args[0]))event.f=args[0];}
