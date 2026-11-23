@@ -38,7 +38,7 @@
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
-let rounds=[], eventRows=[], demo=false, liveEvents=[], liveRequest=0;
+let rounds=[], eventRows=[], demo=false, liveEvents=[], liveRequest=0, activeSource="live";
 const fmt=x=>Number.isFinite(x)?x.toFixed(2)+"x":"—";
 const med=a=>{if(!a.length)return NaN;const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
 const pct=(n,d)=>d?(100*n/d).toFixed(1)+"%":"—";
@@ -58,7 +58,7 @@ function parseText(text,name){
  return {valid,events,invalid};
 }
 function render(){
- if(liveEvents.length){
+ if(activeSource==="live"){
    const mapped=liveEvents.map(e=>({source:e.target,roundId:e.roundId||"",timestamp:e.receivedAt,multiplier:e.target==="OnCrash"&&Number.isFinite(e.f)?e.f:NaN}));
    const crashes=mapped.filter(e=>Number.isFinite(e.multiplier)&&e.multiplier>=1);
    eventRows=mapped;
@@ -91,12 +91,12 @@ window.addEventListener("message",event=>{
  if(event.data.type==="events"){liveEvents=Array.isArray(event.data.events)?event.data.events:[];render();$("status").textContent="تم تحديث البيانات من إضافة Chrome."}
  if(event.data.type==="unavailable")$("liveStatus").textContent="الإضافة غير متاحة. تأكد من تثبيتها وتفعيلها على هذا الموقع.";
 });
-$("connectLive").addEventListener("click",requestLiveEvents);
+$("connectLive").addEventListener("click",()=>{activeSource="live";requestLiveEvents();});
 requestLiveEvents();
 setInterval(requestLiveEvents,3000);
-$("file").addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>25*1024*1024)throw Error("الملف أكبر من 25 ميجابايت");const result=parseText(await f.text(),f.name);rounds=result.valid;eventRows=result.events;demo=false;render();$("status").textContent=`تم فتح ${f.name} · ${rounds.length} جولة صحيحة · ${result.invalid} سجل غير صالح`;}catch(err){$("status").textContent="تعذر فتح الملف: "+err.message}finally{e.target.value=""}});
-$("clear").onclick=()=>{rounds=[];eventRows=[];demo=false;render();$("status").textContent="تم مسح البيانات من الصفحة"};
-$("demo").onclick=()=>{const v=[1.24,2.61,1.01,4.22,1.89,7.15,1.33,2.03,1.08,12.5];rounds=v.map((multiplier,i)=>({multiplier,roundId:String(i+1),timestamp:null,source:"OnCrash"}));eventRows=rounds;demo=true;render();$("status").textContent="بيانات توضيحية فقط، وليست نتائج حقيقية"};
+$("file").addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;try{if(f.size>25*1024*1024)throw Error("الملف أكبر من 25 ميجابايت");const result=parseText(await f.text(),f.name);activeSource="file";rounds=result.valid;eventRows=result.events;demo=false;render();$("status").textContent=`تم فتح ${f.name} · ${rounds.length} جولة صحيحة · ${result.invalid} سجل غير صالح`;}catch(err){$("status").textContent="تعذر فتح الملف: "+err.message}finally{e.target.value=""}});
+$("clear").onclick=()=>{activeSource="none";rounds=[];eventRows=[];demo=false;render();$("status").textContent="تم مسح البيانات من الصفحة. لن تعود البيانات المباشرة إلا عند الضغط على تحديث الاتصال المباشر."};
+$("demo").onclick=()=>{activeSource="demo";const v=[1.24,2.61,1.01,4.22,1.89,7.15,1.33,2.03,1.08,12.5];rounds=v.map((multiplier,i)=>({multiplier,roundId:String(i+1),timestamp:null,source:"OnCrash"}));eventRows=rounds;demo=true;render();$("status").textContent="بيانات توضيحية فقط، وليست نتائج حقيقية"};
 $("export").onclick=()=>{const v=rounds.map(x=>x.multiplier);const report={generatedAt:new Date().toISOString(),demo,roundCount:v.length,median:med(v),below2:v.filter(x=>x<2).length,maximum:v.length?Math.max(...v):null,eventCount:eventRows.length,warning:"Historical data does not reveal the next round multiplier."};const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download="crash-flight-report.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 render();
 </script>
