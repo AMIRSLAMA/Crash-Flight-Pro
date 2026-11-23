@@ -65,11 +65,19 @@ const seen=new Set();
 function setSignal(title,html){$("signalTitle").textContent=title;$("signalText").innerHTML=html;}
 function drawFlight(on){$("flight").classList.toggle("active",on);}
 function eventSummary(e){return e.target+(e.roundId?" · "+e.roundId:"");}
+function liveMultiplier(e){
+ const m=e.metrics&&typeof e.metrics==="object"?e.metrics:{};
+ for(const [key,value] of Object.entries(m)){
+  if(!/(^multiplier$|^currentMultiplier$|^multiplierValue$|^mult$|^coef$|^coefficient$|^factor$)/i.test(key))continue;
+  const n=Number(value);if(Number.isFinite(n)&&n>=1&&n<=100000)return n;
+ }
+ return null;
+}
 function handleEvents(events){
  if(!Array.isArray(events))return;
  for(const e of events){
   if(!e||!e.target)continue;
-  const key=[e.receivedAt,e.target,e.roundId,e.f].join(":");
+  const key=[e.receivedAt,e.target,e.roundId,e.f,JSON.stringify(e.metrics||{})].join(":");
   if(seen.has(key))continue;seen.add(key);lastEventAt=Math.max(lastEventAt,Number(e.receivedAt)||0);
   if(e.target==="OnStart"){
    active=true;round++;$("roundNumber").textContent=e.roundId?"#"+e.roundId:"#"+round;
@@ -82,7 +90,18 @@ function handleEvents(events){
    if(Number.isFinite(mult)&&mult>=1){$("multiplierDisplay").innerHTML=mult.toFixed(2)+'<small>x</small>';results.push(mult);$("history").hidden=false;$("history").textContent="آخر نتيجة مرصودة: "+mult.toFixed(2)+"x";}
    $("connection").textContent="وصل حدث نهاية الجولة";$("connection").className="";
    setSignal("انتهت الجولة","تم التقاط رسالة نهاية الجولة. هذا حدث بعد الانفجار وليس إنذارًا مسبقًا.");
-  }else if(e.target==="OnBetting"&&!active){$("connection").textContent="استقبال أحداث اللعبة";setSignal("مرحلة الرهان","تم رصد مرحلة ما قبل بدء الجولة؛ لا تعني معرفة نتيجة الانفجار.");}
+  }else if(e.target==="OnBetting"&&!active){
+   $("connection").textContent="استقبال أحداث اللعبة";setSignal("مرحلة الرهان","تم رصد مرحلة ما قبل بدء الجولة؛ لا تعني معرفة نتيجة الانفجار.");
+  }else{
+   const mult=liveMultiplier(e);
+   if(mult!==null&&active){
+    $("multiplierDisplay").innerHTML=mult.toFixed(2)+'<small>x</small>';
+    $("connection").textContent="مضاعف حي مرصود";$("connection").className="green";
+    setSignal("بيانات الجولة مباشرة","المضاعف المعروض قراءة من رسالة اللعبة، وليس توقعًا للانفجار.");
+   }else if(active&&e.metrics&&Object.keys(e.metrics).length){
+    $("connection").textContent="بيانات الجولة تُسجّل";$("connection").className="green";
+   }
+  }
  }
 }
 function requestEvents(){

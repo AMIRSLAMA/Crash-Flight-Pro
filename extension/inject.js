@@ -1,11 +1,12 @@
 (()=>{if(window.__crashFlightCaptureInstalled)return;window.__crashFlightCaptureInstalled=true;
  const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
- const METRIC_KEY=/(^|_)(f|x|multiplier|mult|coef|coefficient|factor|crash|elapsed|duration|time|stage|level|rate|speed|progress|round|roundid|ln|ts|l)$/i;
+ const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
+ const METRIC_KEY=/(multiplier|(^|[_-])mult([_-]|$)|coef|coefficient|factor|crash|elapsed|duration|time|stage|level|rate|speed|progress|round|tick|state|result|^f$|^x$)/i;
  function extractMetrics(value,out,depth=0){
-  if(depth>5||value==null)return;
-  if(Array.isArray(value)){for(const item of value.slice(0,40))extractMetrics(item,out,depth+1);return;}
+  if(depth>6||value==null)return;
+  if(Array.isArray(value)){for(const item of value.slice(0,50))extractMetrics(item,out,depth+1);return;}
   if(typeof value!=="object")return;
-  for(const [key,val] of Object.entries(value).slice(0,80)){
+  for(const [key,val] of Object.entries(value).slice(0,100)){
    if(METRIC_KEY.test(key)&&((typeof val==="number"&&Number.isFinite(val))||(typeof val==="string"&&val.length<=48))){
     out[key]=val;
    }else if(val&&typeof val==="object")extractMetrics(val,out,depth+1);
@@ -17,12 +18,12 @@
    if(!part)continue;let obj;try{obj=JSON.parse(part)}catch{continue}
    const messages=Array.isArray(obj)?obj:[obj];
    for(const m of messages){
-    if(!m||typeof m!=="object")continue;
-    const target=typeof m.target==="string"?m.target:null;if(!TARGETS.has(target))continue;
+    if(!m||typeof m!=="object"||m.type!==1||typeof m.target!=="string")continue;
+    const target=m.target;if(!TARGETS.has(target)&&!RELEVANT.test(target))continue;
     const args=Array.isArray(m.arguments)?m.arguments:[];
-    const payload=args.find(a=>a&&typeof a==="object")||{};
     const metrics={};extractMetrics(args,metrics);extractMetrics(m,metrics);
     const event={target,argCount:args.length,metrics};
+    const payload=args.find(a=>a&&typeof a==="object")||{};
     for(const key of ["l","ln","ts"]){const val=payload[key]??m[key];if(typeof val==="number"&&Number.isFinite(val))event[key]=val;else if(key==="l"&&typeof val==="string"&&val.length<60)event[key]=val;}
     if(target==="OnCrash"){const f=payload.f??m.f;if(typeof f==="number"&&Number.isFinite(f))event.f=f;else if(typeof args[0]==="number"&&Number.isFinite(args[0]))event.f=args[0];}
     window.postMessage({source:"crash-flight-pro-capture",event},"*");
