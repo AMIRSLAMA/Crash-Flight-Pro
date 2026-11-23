@@ -1,16 +1,57 @@
 const KEY="crashFlightEvents";
 const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
 const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
+let pendingRecords=[];
+let flushPromise=null;
+let flushTimer=null;
+const flushWaiters=[];
+function flushRecords(){
+ if(flushPromise)return flushPromise;
+ flushPromise=(async()=>{
+  while(pendingRecords.length){
+   const batch=pendingRecords.splice(0,pendingRecords.length);
+   const data=await chrome.storage.local.get({[KEY]:[]});
+   const arr=data[KEY];
+   arr.push(...batch);
+   if(arr.length>20000)arr.splice(0,arr.length-20000);
+   await chrome.storage.local.set({[KEY]:arr});
+  }
+ })().catch(error=>{
+  console.error("Crash Flight storage flush failed:",error);
+  throw error;
+ }).finally(()=>{
+  flushPromise=null;
+  if(pendingRecords.length) scheduleFlush();
+  while(flushWaiters.length)flushWaiters.shift()();
+ });
+ return flushPromise;
+}
+function scheduleFlush(){
+ if(flushTimer!==null)return;
+ flushTimer=setTimeout(()=>{
+  flushTimer=null;
+  flushRecords().catch(()=>{});
+ },200);
+}
 chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  if(message?.type==="crash-flight-get-events"){
-  chrome.storage.local.get({[KEY]:[]},data=>respond({events:data[KEY].slice(-5000)}));
+  const reply=async()=>{
+   if(flushTimer!==null){clearTimeout(flushTimer);flushTimer=null;}
+   if(flushPromise)await new Promise(resolve=>flushWaiters.push(resolve));
+   await flushRecords();
+   const data=await chrome.storage.local.get({[KEY]:[]});
+   respond({events:data[KEY].slice(-5000)});
+  };
+  reply().catch(error=>{console.error(error);respond({error:"storage-unavailable",events:[]});});
   return true;
  }
  if(message?.type!=="crash-flight-event"||!sender.tab?.id)return;
  const event=message.event;
  if(event?.kind==="transport"&&event.target==="__transport__"){
-  const record={target:"__transport__",kind:"transport",transportType:String(event.transportType||"unknown").slice(0,24),byteLength:Number.isFinite(event.byteLength)?Math.max(0,event.byteLength):0,receivedAt:Date.now()};
-  chrome.storage.local.get({[KEY]:[]},data=>{const arr=data[KEY];arr.push(record);if(arr.length>20000)arr.splice(0,arr.length-20000);chrome.storage.local.set({[KEY]:arr});});
+  // Keep only connection-open markers; per-frame transport logs flood storage.
+  if(event.transportType!=="websocket-open")return;
+  pendingRecords.push({target:"__transport__",kind:"transport",transportType:"websocket-open",byteLength:0,receivedAt:Date.now()});
+  scheduleFlush();
   return;
  }
  if(!event||typeof event.target!=="string"||(!TARGETS.has(event.target)&&!RELEVANT.test(event.target)))return;
@@ -21,15 +62,12 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  if(event.metrics&&typeof event.metrics==="object"){
   record.metrics={};
   for(const [key,value] of Object.entries(event.metrics).slice(0,80)){
-   if(/^[a-zA-Z0-9_]{1,48}$/.test(key)&&(typeof value==="number"&&Number.isFinite(value)))record.metrics[key]=value;
+   if(/^[a-zA-Z0-9_]{1,48}$/.test(key)&&typeof value==="number"&&Number.isFinite(value))record.metrics[key]=value;
   }
  }
  if(Number.isInteger(event.argCount))record.argCount=event.argCount;
  if(Array.isArray(event.numericPaths))record.numericPaths=event.numericPaths.slice(0,160).filter(x=>x&&typeof x.path==="string"&&x.path.length<=180&&typeof x.value==="number"&&Number.isFinite(x.value));
  if(Array.isArray(event.shape))record.shape=event.shape.slice(0,120).filter(x=>typeof x==="string"&&x.length<=160&&/^[a-zA-Z0-9_$.[\]:_-]+$/.test(x));
- chrome.storage.local.get({[KEY]:[]},data=>{
-  const arr=data[KEY];arr.push(record);
-  if(arr.length>20000)arr.splice(0,arr.length-20000);
-  chrome.storage.local.set({[KEY]:arr});
- });
+ pendingRecords.push(record);
+ scheduleFlush();
 });
