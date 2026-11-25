@@ -77,8 +77,15 @@
    const decoder=window.CrashFlightMessagePack;
    if(decoder&&typeof decoder.parseSignalRFrames==="function"){
     const parsed=decoder.parseSignalRFrames(bytes);
-    if(parsed.invocations.length){handle(JSON.stringify(parsed.invocations));return;}
-    if(parsed.malformed===0&&parsed.consumedBytes===bytes.length&&!parsed.incomplete)return;
+    if(parsed.invocations.length){
+     reportTransport("messagepack-decoded",bytes.length,parsed.invocations.length,parsed.malformed,parsed.incomplete);
+     handle(JSON.stringify(parsed.invocations));return;
+    }
+    if(parsed.malformed>0||parsed.incomplete){
+     reportTransport("messagepack-unreadable",bytes.length,0,parsed.malformed,parsed.incomplete);
+     return;
+    }
+    if(parsed.consumedBytes===bytes.length)return;
    }
    let offset=0,length=0,shift=0;
    while(offset<bytes.length&&shift<=28){const b=bytes[offset++];length|=(b&127)<<shift;if(!(b&128))break;shift+=7;}
@@ -87,8 +94,8 @@
   }catch(_){}
  }
  const Native=window.WebSocket;if(typeof Native!=="function")return;
- function reportTransport(kind,byteLength){
-  window.postMessage({source:"crash-flight-pro-capture",event:{kind:"transport",target:"__transport__",transportType:kind,byteLength:Number.isFinite(byteLength)?byteLength:0}},"*");
+ function reportTransport(kind,byteLength,decodedCount=0,malformedCount=0,incomplete=false){
+  window.postMessage({source:"crash-flight-pro-capture",event:{kind:"transport",target:"__transport__",transportType:kind,byteLength:Number.isFinite(byteLength)?byteLength:0,decodedCount,malformedCount,incomplete}},"*");
  }
  class ObservedWebSocket extends Native{
   constructor(...args){super(...args);reportTransport("websocket-created",0);this.addEventListener("open",()=>reportTransport("websocket-open",0),{once:true});this.addEventListener("message",e=>{
