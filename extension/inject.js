@@ -78,7 +78,7 @@
    if(decoder&&typeof decoder.parseSignalRFrames==="function"){
     const parsed=decoder.parseSignalRFrames(bytes);
     if(parsed.invocations.length){handle(JSON.stringify(parsed.invocations));return;}
-    if(parsed.consumedBytes===bytes.length&&!parsed.incomplete)return;
+    if(parsed.malformed===0&&parsed.consumedBytes===bytes.length&&!parsed.incomplete)return;
    }
    // Legacy length-prefixed JSON fallback.
    let offset=0,length=0,shift=0;
