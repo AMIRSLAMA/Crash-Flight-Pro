@@ -1,4 +1,4 @@
-(()=>{const CAPTURE_VERSION="0.3.3";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
+(()=>{const CAPTURE_VERSION="0.4.0";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
  const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
  const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
  const METRIC_KEY=/(multiplier|(^|[_-])mult([_-]|$)|coef|coefficient|factor|crash|elapsed|duration|time|stage|level|rate|speed|progress|round|tick|state|result|^f$|^x$)/i;
@@ -72,7 +72,16 @@
   }
  }
  function handleBinary(data){
-  try{const bytes=new Uint8Array(data);let offset=0,length=0,shift=0;
+  try{
+   const bytes=new Uint8Array(data);
+   const decoder=window.CrashFlightMessagePack;
+   if(decoder&&typeof decoder.parseSignalRFrames==="function"){
+    const parsed=decoder.parseSignalRFrames(bytes);
+    if(parsed.invocations.length){handle(JSON.stringify(parsed.invocations));return;}
+    if(parsed.consumedBytes===bytes.length&&!parsed.incomplete)return;
+   }
+   // Legacy length-prefixed JSON fallback.
+   let offset=0,length=0,shift=0;
    while(offset<bytes.length&&shift<=28){const b=bytes[offset++];length|=(b&127)<<shift;if(!(b&128))break;shift+=7;}
    if(length>0&&offset+length<=bytes.length){handle(new TextDecoder().decode(bytes.subarray(offset,offset+length)));return;}
    handle(new TextDecoder().decode(bytes));
@@ -83,7 +92,7 @@
   window.postMessage({source:"crash-flight-pro-capture",event:{kind:"transport",target:"__transport__",transportType:kind,byteLength:Number.isFinite(byteLength)?byteLength:0}},"*");
  }
  class ObservedWebSocket extends Native{
-  constructor(...args){super(...args);reportTransport("websocket-open",0);this.addEventListener("message",e=>{
+  constructor(...args){super(...args);reportTransport("websocket-created",0);this.addEventListener("open",()=>reportTransport("websocket-open",0),{once:true});this.addEventListener("message",e=>{
    if(typeof e.data==="string"){handle(e.data);}
    else if(e.data instanceof ArrayBuffer){handleBinary(e.data);}
    else if(typeof Blob!=="undefined"&&e.data instanceof Blob){e.data.arrayBuffer().then(handleBinary).catch(()=>{});}
