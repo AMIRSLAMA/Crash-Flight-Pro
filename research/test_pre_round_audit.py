@@ -25,6 +25,14 @@ class AuditTests(unittest.TestCase):
         result = audit(events)
         self.assertEqual(result["roundsWithPreStartCandidate"], 0)
 
+    def test_missing_onstart_is_not_proven_prestart(self):
+        events = [
+            {"target":"OnBetting","roundId":"r3","receivedAt":1000,"f":2.0},
+            {"target":"OnCrash","roundId":"r3","receivedAt":3000,"f":2.0},
+        ]
+        result = audit(events)
+        self.assertEqual(result["roundsWithPreStartCandidate"], 0)
+
     def test_onstage_ln_can_link_round(self):
         events = [
             {"target":"OnStage","ln":7,"receivedAt":1000,"metrics":{"crash":1.8}},
