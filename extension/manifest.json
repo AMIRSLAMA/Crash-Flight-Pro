@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Crash Flight Pro — Live Capture",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Opt-in sanitized SignalR event capture and local dashboard bridge. No betting automation.",
   "permissions": [
     "storage",
@@ -32,6 +32,7 @@
         "https://*.1xlite-11151.pro/*"
       ],
       "js": [
+        "messagepack.js",
         "inject.js"
       ],
       "run_at": "document_start",
