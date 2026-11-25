@@ -48,14 +48,19 @@
   const bytes=input instanceof Uint8Array?input:new Uint8Array(input);
   const invocations=[];let offset=0,incomplete=false,malformed=0;
   while(offset<bytes.length){
-   const frameStart=offset;let length=0,shift=0,prefixDone=false;
+   const frameStart=offset;let length=0,multiplier=1,prefixDone=false,invalidPrefix=false;
    for(let i=0;i<5;i++){
     if(offset>=bytes.length){incomplete=true;offset=frameStart;break;}
-    const b=bytes[offset++];length|=(b&127)<<shift;
-    if(!(b&128)){prefixDone=true;break;}shift+=7;
+    const b=bytes[offset++],chunk=b&127;
+    // A uint32 varint has at most four bits in its fifth byte.
+    if(i===4&&(chunk>15||(b&128))){invalidPrefix=true;break;}
+    length+=chunk*multiplier;
+    if(!(b&128)){prefixDone=true;break;}
+    multiplier*=128;
    }
    if(incomplete)break;
-   if(!prefixDone||length<=0||length>4194304){malformed++;offset=frameStart+1;continue;}
+   // Do not scan arbitrary payload bytes for a new frame after a bad length prefix.
+   if(invalidPrefix||!prefixDone||length<=0||length>4194304){malformed++;offset=frameStart;break;}
    if(offset+length>bytes.length){incomplete=true;offset=frameStart;break;}
    try{
     const decoded=decodeMessagePack(bytes.subarray(offset,offset+length));
