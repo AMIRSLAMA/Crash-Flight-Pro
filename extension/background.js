@@ -49,8 +49,8 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  const event=message.event;
  if(event?.kind==="transport"&&event.target==="__transport__"){
   // Keep only connection-open markers; per-frame transport logs flood storage.
-  if(event.transportType!=="websocket-open")return;
-  pendingRecords.push({target:"__transport__",kind:"transport",transportType:"websocket-open",byteLength:0,receivedAt:Date.now()});
+  if(!["websocket-created","websocket-open"].includes(event.transportType))return;
+  pendingRecords.push({target:"__transport__",kind:"transport",transportType:event.transportType,byteLength:0,receivedAt:Date.now()});
   scheduleFlush();
   return;
  }

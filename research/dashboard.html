@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CRASH FLIGHT AI — Research Console</title>
+<style>
+:root{color-scheme:dark;--bg:#090e16;--panel:#111b29;--line:#26364a;--gold:#d9b45b;--muted:#9eafc3;--green:#4dd6a1}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#18283b,#090e16 58%);color:#eef4fb;font:15px Tahoma,Arial,sans-serif}
+main{max-width:1050px;margin:auto;padding:28px 18px}header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+h1{margin:0;color:var(--gold);letter-spacing:1px;font-size:25px}small,.muted{color:var(--muted)}
+.panel{background:linear-gradient(145deg,#142235,#0e1724);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:16px;box-shadow:0 12px 35px #0005}
+.hero{text-align:center;padding:30px 15px}.hero .signal{font-size:44px;font-weight:bold;color:var(--gold);margin:12px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{background:#0a1421;border:1px solid var(--line);padding:14px;border-radius:12px}.metric b{display:block;font-size:24px;margin-top:8px}
+button,.file{background:var(--gold);color:#111;border:0;border-radius:9px;padding:11px 15px;font-weight:bold;cursor:pointer}
+.file input{display:none}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{text-align:right;padding:11px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--gold)}
+.status{display:inline-block;border:1px solid #6b5525;color:var(--gold);padding:6px 10px;border-radius:30px;font-size:12px}
+.good{color:var(--green)}.warn{color:#ffc66d}
+@media(max-width:650px){.grid{grid-template-columns:repeat(2,1fr)}h1{font-size:19px}}
+</style></head>
+<body><main>
+<header><div><h1>✈ CRASH FLIGHT AI</h1><small>RESEARCH CONSOLE · 1XBET CRASH</small></div><label class="file">تحميل تقرير الفحص<input id="reportFile" type="file" accept=".json,application/json"></label></header>
+<section class="panel hero"><span class="status" id="state">في انتظار تقرير التحليل</span><div class="muted">إشارة الجولة القادمة</div><div class="signal" id="signal">— —</div><div class="muted" id="signalNote">لا نعرض توقعًا غير مثبت. حمّل تقرير JSON الناتج من محرك الفحص.</div></section>
+<section class="panel"><div class="grid">
+<div class="metric"><small>الأحداث المسجلة</small><b id="events">0</b></div>
+<div class="metric"><small>الجولات المرتبطة</small><b id="rounds">0</b></div>
+<div class="metric"><small>مرشحات قبل البداية</small><b id="candidates">0</b></div>
+<div class="metric"><small>تطابقات فعلية</small><b id="matches">0</b></div>
+</div></section>
+<section class="panel"><h3>سجل الاختبار</h3><p class="muted">يعرض هذا الجدول فقط القيم الصريحة التي رُصدت قبل OnStart ثم قورنت بنتيجة OnCrash للجولة نفسها. لا تُعامل نقاط منحنى OnProfits كإشارات.</p>
+<table><thead><tr><th>رقم الجولة</th><th>المرشح المبكر</th><th>النتيجة الفعلية</th><th>الحكم</th><th>زمن السبق</th></tr></thead><tbody id="rows"><tr><td colspan="5" class="muted">لا توجد بيانات بعد</td></tr></tbody></table></section>
+<section class="panel"><b>مبدأ الاختبار</b><p class="muted">هذه الأداة تفحص وجود معلومة صريحة قبل بداية الجولة، ولا تتنبأ بنتائج عشوائية ولا تنفذ رهانات. تطابقات قليلة لا تثبت وجود تسريب؛ يلزم تكرار الاختبار على جولات جديدة مستقلة وفهم معنى الحقل في البروتوكول.</p></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+$("reportFile").addEventListener("change",async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+  const report=JSON.parse(await file.text());
+  $("events").textContent=report.events??0;$("rounds").textContent=report.linkedRounds??0;
+  $("candidates").textContent=report.roundsWithPreStartCandidate??0;$("matches").textContent=report.matches??0;
+  const results=Array.isArray(report.results)?report.results:[];
+  $("rows").innerHTML=results.length?results.map(r=>'<tr><td>'+esc(r.roundId)+'</td><td>'+Number(r.candidate).toFixed(4)+'x</td><td>'+Number(r.actual).toFixed(4)+'x</td><td class="'+(r.match?'good':'warn')+'">'+(r.match?'تطابق':'غير متطابق')+'</td><td>'+Number(r.leadMs).toFixed(0)+' ms</td></tr>').join(""):'<tr><td colspan="5" class="muted">لم تُكتشف قيم صريحة قبل OnStart في هذا التقرير</td></tr>';
+  $("state").textContent="تم تحميل التقرير";$("signal").textContent="AUDIT COMPLETE";$("signalNote").textContent="التقرير يعرض نتائج فحص تاريخية، وليس توقع الجولة القادمة.";
+ }catch(err){$("state").textContent="ملف غير صالح";$("signalNote").textContent=err.message}
+});
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+</script></body></html>
