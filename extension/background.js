@@ -2,6 +2,7 @@ const KEY="crashFlightEvents";
 const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
 const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
 let pendingRecords=[];
+const lastTransportDiagnostic=new Map();
 let flushPromise=null;
 let flushTimer=null;
 const flushWaiters=[];
@@ -48,9 +49,22 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  if(message?.type!=="crash-flight-event"||!sender.tab?.id)return;
  const event=message.event;
  if(event?.kind==="transport"&&event.target==="__transport__"){
-  // Keep only connection-open markers; per-frame transport logs flood storage.
-  if(!["websocket-created","websocket-open"].includes(event.transportType))return;
-  pendingRecords.push({target:"__transport__",kind:"transport",transportType:event.transportType,byteLength:0,receivedAt:Date.now()});
+  const allowed=["websocket-created","websocket-open","messagepack-decoded","messagepack-unreadable"];
+  if(!allowed.includes(event.transportType))return;
+  const now=Date.now();
+  // Throttle repeated frame diagnostics so a busy socket cannot flood local storage.
+  if(event.transportType.startsWith("messagepack-")){
+   const last=lastTransportDiagnostic.get(event.transportType)||0;
+   if(now-last<1000)return;
+   lastTransportDiagnostic.set(event.transportType,now);
+  }
+  pendingRecords.push({
+   target:"__transport__",kind:"transport",transportType:event.transportType,
+   byteLength:Number.isFinite(event.byteLength)?Math.max(0,Math.min(event.byteLength,4194304)):0,
+   decodedCount:Number.isInteger(event.decodedCount)?Math.max(0,Math.min(event.decodedCount,1000)):0,
+   malformedCount:Number.isInteger(event.malformedCount)?Math.max(0,Math.min(event.malformedCount,1000)):0,
+   incomplete:event.incomplete===true,receivedAt:now
+  });
   scheduleFlush();
   return;
  }
