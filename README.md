@@ -8,7 +8,7 @@ A compact Arabic crash-round dashboard with a small animated aircraft, live roun
 3. Open the supported game page on `1xbet.com` or `eg1xbet.com` and reload it after installing the extension.
 4. Open the published dashboard: https://amirslama.github.io/Crash-Flight-Pro/
 
-The extension observes supported WebSocket SignalR JSON events and forwards sanitized round events to the dashboard. It stores recent event metadata locally in Chrome. It does not collect login credentials, place bets, or automate gameplay.
+The extension observes WebSocket SignalR JSON and MessagePack invocation frames and forwards sanitized round events to the dashboard. It stores recent event metadata locally in Chrome. It does not collect login credentials, place bets, or automate gameplay.
 
 ## What the dashboard can and cannot show
 - `OnStart` starts the plane animation when that event is actually observed.
@@ -20,7 +20,7 @@ The extension observes supported WebSocket SignalR JSON events and forwards sani
 - The app does not know the next multiplier or guarantee a pre-crash alert. No prediction is displayed unless a genuinely predictive source is established and tested separately.
 
 ## Troubleshooting
-If the dashboard says the extension is unavailable, confirm the extension is enabled and reload both the game tab and dashboard. If it says it is waiting for game events, the current game session may use a different host, transport, frame, or message format than the supported capture. The capture currently handles SignalR JSON text and length-prefixed JSON frames; it does not decode MessagePack.
+If the dashboard says the extension is unavailable, confirm the extension is enabled and reload both the game tab and dashboard. If it says it is waiting for game events, the current game session may use a different host, transport, frame, or message format than the supported capture. The capture handles SignalR JSON text, legacy length-prefixed JSON frames, and SignalR MessagePack invocation frames with varint length prefixes. MessagePack support is covered by the Node test in `extension/test-messagepack.js`.
 
 ## Desktop analyzer
 Historical desktop analyzer sources and build workflows remain in the repository.
