@@ -83,6 +83,8 @@ def audit(events):
         crash_time = crash.get("receivedAt", 0)
         actual = float(crash["f"])
         start_time = min((t for t in starts if t <= crash_time), default=None)
+        if start_time is None:
+            continue  # Without OnStart, we cannot prove that a value arrived pre-start.
         candidates = []
         for event in records:
             t = event.get("receivedAt", 0)
