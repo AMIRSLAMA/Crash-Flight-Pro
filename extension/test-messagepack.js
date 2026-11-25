@@ -20,4 +20,18 @@ assert.equal(partial.invocations.length,0);
 assert.equal(partial.incomplete,true);
 const ignored=frame(arr([num(6),map([]),Buffer.from([0xc0])]));
 assert.equal(parseSignalRFrames(ignored).invocations.length,0);
+
+// Truncated varint prefixes must remain incomplete and must not throw.
+const truncatedPrefix=parseSignalRFrames(Buffer.from([0x80,0x80]));
+assert.equal(truncatedPrefix.incomplete,true);
+assert.equal(truncatedPrefix.malformed,0);
+
+// Oversized and overflowing frame lengths are rejected without scanning
+// subsequent bytes as if they were a fresh frame.
+const oversized=parseSignalRFrames(Buffer.concat([Buffer.from([0x83,0x80,0x80,0x03]),crash]));
+assert.equal(oversized.malformed,1);
+assert.equal(oversized.invocations.length,0);
+const overflow=parseSignalRFrames(Buffer.concat([Buffer.from([0xff,0xff,0xff,0xff,0x10]),crash]));
+assert.equal(overflow.malformed,1);
+assert.equal(overflow.invocations.length,0);
 console.log("MessagePack SignalR tests passed.");
