@@ -24,3 +24,17 @@ If the dashboard says the extension is unavailable, confirm the extension is ena
 
 ## Desktop analyzer
 Historical desktop analyzer sources and build workflows remain in the repository.
+
+## Optional Crash Live Collector bridge
+
+Version 0.3.1 can forward only completed `OnCrash` results (round ID and final multiplier) to a collector running on the operator's own machine at `http://127.0.0.1:3038`. Other captured event metadata remains in local Chrome storage.
+
+To connect to the private VPS collector, open an SSH local-forward tunnel on the same Windows computer where Chrome runs:
+
+```powershell
+ssh -N -L 3038:127.0.0.1:3038 amir@100.91.140.35
+```
+
+Keep that terminal open while capturing. The collector remains bound to the VPS loopback interface; do not expose port 3038 publicly or through Funnel. If the tunnel is unavailable, the extension keeps the sanitized event locally and logs a warning; export remains available as a fallback. Duplicate round IDs are treated as already imported.
+
+The bridge sends no cookies, credentials, account identifiers, raw WebSocket frames, or betting data. Forwarding occurs only for a completed `OnCrash` event containing a numeric final multiplier and round ID. This is result collection, not advance prediction.
