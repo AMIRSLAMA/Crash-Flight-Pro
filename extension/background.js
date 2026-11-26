@@ -1,10 +1,32 @@
 const KEY="crashFlightEvents";
 const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
 const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
+// The collector is reachable only through the operator's SSH local-forward tunnel.
+const COLLECTOR_URL="http://127.0.0.1:3038/api/rounds";
 let pendingRecords=[];
 let flushPromise=null;
 let flushTimer=null;
 const flushWaiters=[];
+async function forwardCompletedRound(event){
+ if(event?.target!=="OnCrash"||typeof event.f!=="number"||!Number.isFinite(event.f)||event.f<1)return;
+ if(event.l===undefined||event.l===null||String(event.l).length===0)return;
+ const payload={roundId:String(event.l).slice(0,120),multiplier:event.f};
+ if(typeof event.ts==="number"&&Number.isFinite(event.ts)&&event.ts>0){
+  const date=new Date(event.ts);
+  if(!Number.isNaN(date.getTime()))payload.occurredAt=date.toISOString();
+ }
+ for(let attempt=0;attempt<2;attempt++){
+  try{
+   const response=await fetch(COLLECTOR_URL,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload),credentials:"omit",cache:"no-store",redirect:"error"});
+   if(response.ok||response.status===409)return;
+   console.warn("Crash Live Collector rejected completed round:",response.status);
+   return;
+  }catch(error){
+   if(attempt===1)console.warn("Crash Live Collector unavailable; sanitized event remains in local extension storage.",String(error?.message||error));
+   else await new Promise(resolve=>setTimeout(resolve,700));
+  }
+ }
+}
 function flushRecords(){
  if(flushPromise)return flushPromise;
  flushPromise=(async()=>{
@@ -48,7 +70,6 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  if(message?.type!=="crash-flight-event"||!sender.tab?.id)return;
  const event=message.event;
  if(event?.kind==="transport"&&event.target==="__transport__"){
-  // Keep only connection-open markers; per-frame transport logs flood storage.
   if(event.transportType!=="websocket-open")return;
   pendingRecords.push({target:"__transport__",kind:"transport",transportType:"websocket-open",byteLength:0,receivedAt:Date.now()});
   scheduleFlush();
@@ -70,4 +91,6 @@ chrome.runtime.onMessage.addListener((message,sender,respond)=>{
  if(Array.isArray(event.shape))record.shape=event.shape.slice(0,120).filter(x=>typeof x==="string"&&x.length<=160&&/^[a-zA-Z0-9_$.[\]:_-]+$/.test(x));
  pendingRecords.push(record);
  scheduleFlush();
+ // Only the completed round result is forwarded; all other telemetry stays local.
+ if(event.target==="OnCrash")forwardCompletedRound(event).catch(()=>{});
 });
