@@ -25,7 +25,10 @@ jobs:
           node --check extension/content.js
           node --check extension/background.js
           node --check extension/popup.js
+          node --check extension/test-capture-optin.js
       - name: Validate extension manifest
         run: node -e "JSON.parse(require('fs').readFileSync('extension/manifest.json', 'utf8'))"
       - name: Run MessagePack protocol tests
         run: node extension/test-messagepack.js
+      - name: Run capture opt-in gate tests
+        run: node extension/test-capture-optin.js
