@@ -2,6 +2,9 @@
 const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const vm=require("node:vm");
+const manifest=JSON.parse(fs.readFileSync("extension/manifest.json","utf8"));
+const popupSource=fs.readFileSync("extension/popup.js","utf8");
+assert.match(popupSource,new RegExp('const CAPTURE_VERSION="'+manifest.version+'"'),"popup version must match extension manifest");
 function makeWindow(){
  const listeners={};
  const posted=[];
