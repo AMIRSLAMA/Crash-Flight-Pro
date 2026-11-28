@@ -1,7 +1,12 @@
-(()=>{const CAPTURE_VERSION="0.4.0";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
+(()=>{const CAPTURE_VERSION="0.4.1";if(window.__crashFlightCaptureInstalled===CAPTURE_VERSION)return;window.__crashFlightCaptureInstalled=CAPTURE_VERSION;
  const TARGETS=new Set(["OnStage","OnBetting","OnStart","OnCrash","OnBets","OnProfits"]);
  const RELEVANT=/(round|crash|bet|start|stage|tick|coef|mult|update|state|progress|fly|game|factor|rate|speed)/i;
  const METRIC_KEY=/(multiplier|(^|[_-])mult([_-]|$)|coef|coefficient|factor|crash|elapsed|duration|time|stage|level|rate|speed|progress|round|tick|state|result|^f$|^x$)/i;
+ let captureEnabled=false;
+ window.addEventListener("message",event=>{
+  if(event.source!==window||event.data?.source!=="crash-flight-control"||typeof event.data.enabled!=="boolean")return;
+  captureEnabled=event.data.enabled;
+ });
  function extractMetrics(value,out,depth=0){
   if(depth>6||value==null)return;
   if(Array.isArray(value)){for(const item of value.slice(0,50))extractMetrics(item,out,depth+1);return;}
@@ -35,7 +40,7 @@
   }
  }
  function handle(raw){
-  if(typeof raw!=="string")return;
+  if(!captureEnabled||typeof raw!=="string")return;
   for(const part of raw.split("\x1e")){
    if(!part)continue;let obj;try{obj=JSON.parse(part)}catch{continue}
    const messages=Array.isArray(obj)?obj:[obj];
@@ -72,6 +77,7 @@
   }
  }
  function handleBinary(data){
+  if(!captureEnabled)return;
   try{
    const bytes=new Uint8Array(data);
    const decoder=window.CrashFlightMessagePack;
@@ -95,6 +101,7 @@
  }
  const Native=window.WebSocket;if(typeof Native!=="function")return;
  function reportTransport(kind,byteLength,decodedCount=0,malformedCount=0,incomplete=false){
+  if(!captureEnabled)return;
   window.postMessage({source:"crash-flight-pro-capture",event:{kind:"transport",target:"__transport__",transportType:kind,byteLength:Number.isFinite(byteLength)?byteLength:0,decodedCount,malformedCount,incomplete}},"*");
  }
  class ObservedWebSocket extends Native{
